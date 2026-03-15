@@ -39,6 +39,7 @@ logger = logging.getLogger(__name__)
 
 ROOT = Path(__file__).resolve().parent
 FRONTEND_DIR = ROOT / "care_frontend"
+API_VERSION = 2
 
 AUTH_TOKENS: dict[str, Dict[str, Any]] = {}
 SESSIONS: dict[str, Dict[str, Any]] = {}
@@ -72,12 +73,28 @@ def build_bootstrap_payload() -> Dict[str, Any]:
     state = load_platform_state()
     admin_accounts = [item for item in list_login_accounts(state, include_admin=True, include_password=True) if item["role"] == "admin"]
     return {
+        "api_version": API_VERSION,
         "demo_accounts": list_login_accounts(state, include_admin=False, include_password=True),
         "admin_account": admin_accounts[0] if admin_accounts else None,
         "personas": state.get("personas", {}),
         "api_settings": state.get("api_settings", {}),
         "prompt_settings": state.get("prompt_settings", {}),
         "updated_at": state.get("updated_at", ""),
+    }
+
+
+def build_health_payload() -> Dict[str, Any]:
+    return {
+        "ok": True,
+        "service": "care_companion_server",
+        "api_version": API_VERSION,
+        "capabilities": [
+            "bootstrap",
+            "auth",
+            "admin",
+            "report",
+            "background_llm",
+        ],
     }
 
 
@@ -169,7 +186,11 @@ class CareCompanionHandler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:  # noqa: N802
         parsed = urlparse(self.path)
         if parsed.path == "/api/health":
-            self._send_json({"ok": True, "service": "care_companion_server"})
+            self._send_json(build_health_payload())
+            return
+
+        if parsed.path == "/api/bootstrap":
+            self._send_json(build_bootstrap_payload())
             return
 
         self._serve_static(parsed.path)

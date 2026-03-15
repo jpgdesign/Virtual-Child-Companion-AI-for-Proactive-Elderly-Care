@@ -28,12 +28,17 @@ function escapeHtml(value) {
     .replaceAll("'", "&#39;");
 }
 
-async function requestJson(url, payload = {}) {
-  const response = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
+async function requestJson(url, payload = {}, options = {}) {
+  const method = options.method || "POST";
+  const fetchOptions = {
+    method,
+    cache: "no-store",
+  };
+  if (method !== "GET") {
+    fetchOptions.headers = { "Content-Type": "application/json" };
+    fetchOptions.body = JSON.stringify(payload);
+  }
+  const response = await fetch(url, fetchOptions);
   const rawText = await response.text();
   let data = {};
   try {
@@ -45,6 +50,31 @@ async function requestJson(url, payload = {}) {
     throw new Error(data.error || "Request failed");
   }
   return data;
+}
+
+async function requestBootstrap() {
+  try {
+    return await requestJson("/api/bootstrap");
+  } catch (error) {
+    if (!String(error.message || "").includes("Unknown endpoint")) {
+      throw error;
+    }
+
+    try {
+      const health = await requestJson("/api/health", {}, { method: "GET" });
+      if (health?.ok) {
+        throw new Error(
+          "偵測到舊版後端仍在執行。請先停止目前的 Python server，再重新執行 `py care_companion_server.py --open-browser`。"
+        );
+      }
+    } catch (healthError) {
+      if (healthError instanceof Error && healthError.message !== "Unknown endpoint.") {
+        throw healthError;
+      }
+    }
+
+    throw error;
+  }
 }
 
 function formatMetric(value) {
@@ -1129,7 +1159,7 @@ function bindEvents() {
 }
 
 async function init() {
-  state.bootstrap = await requestJson("/api/bootstrap");
+  state.bootstrap = await requestBootstrap();
   state.adminUserDraft = getDefaultUserDraft();
   renderApp();
 }
