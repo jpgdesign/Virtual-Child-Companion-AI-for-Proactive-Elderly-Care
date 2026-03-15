@@ -88,7 +88,7 @@ function getPresetLabel(presetId) {
   if (!preset) {
     return presetId;
   }
-  return `${preset.model} (${preset.provider})`;
+  return preset.model;
 }
 
 function getVoiceModeLabel() {
