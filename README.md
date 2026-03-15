@@ -1,370 +1,591 @@
-# AI 輕量化應用於老人對話模擬專案
+# 虛擬子女照護陪伴系統
 
-本專案聚焦在「老人日常對話模擬、腳本生成、獎勵設計、強化學習訓練」，並以此作為 AI 輕量化應用的討論案例。這份 README 不是只解釋原始程式碼在做什麼，也把目前資料夾裡真實存在的檔案、可行性檢查結果、GitHub 上傳前該注意的風險，一次整理完成。
+以「虛擬兒女」為核心角色的高齡照護陪伴原型。系統把 `RL 劇本策略選擇`、`LLM 理解與生成`、`家庭畫像`、`登入入口`、`報告儀表板`、`後台管理` 整合成同一套網站與本地執行環境。
 
-## 1. AI 輕量化是什麼
+目前版本已經不是單純的聊天 demo，而是可實際操作的產品型流程：
 
-AI 輕量化（AI Lightweighting）是指：在盡量保留模型效果的前提下，降低模型的運算量、記憶體占用、延遲、部署成本與維運複雜度。它不是單一技術，而是一組工程策略。
+1. 先進入導覽說明頁
+2. 再使用家庭帳號登入
+3. 登入後選擇進入 `家屬` / `長者` / `報告`
+4. 右上角可再登入 `後台管理`
 
-常見目標包括：
+---
 
-- 降低 GPU / CPU 推論成本
-- 讓模型能在較小裝置或邊緣設備運行
-- 減少回應延遲
-- 降低 API 呼叫次數與費用
-- 簡化系統依賴，提升可部署性
-- 增加可維護性與可測試性
+## 1. 專案目標
 
-## 2. AI 輕量化常見應用
+這個專案要解決的不是「做一個會聊天的機器人」而已，而是做一個更像真實兒女的照護陪伴系統：
 
-AI 輕量化最常見於下列場景：
+- 能用熟悉的稱呼和口氣和長者對話
+- 能延續家庭關係與既有相處模式
+- 能在聊天中隱性引導蒐集照護資訊
+- 能把對話整理成家屬可讀的照護摘要
+- 能保留管理入口，讓後台調整畫像、提示詞、帳號與 API
 
-- 手機或平板上的語音助理、翻譯、摘要、OCR
-- 長照、醫療、客服等需要長時間運作的陪伴型對話系統
-- IoT / 邊緣設備上的影像辨識、異常偵測
-- 企業內部知識問答，透過小模型或快取減少大模型成本
-- 教育、健康追蹤、日常提醒等需要高可用但低成本的 AI 服務
+---
 
-如果把本專案放進這個脈絡，它很適合作為「高齡照護對話系統」的研究原型：先用較完整、較重的流程建立資料與策略，再逐步把核心能力壓縮成更容易部署的版本。
+## 2. 目前已完成的產品流程
 
-## 3. 這個專案與 AI 輕量化的關聯
+### 2.1 前台使用流程
 
-這個資料夾中的程式，現在已經可以拆成「離線生成 / 訓練」與「輕量 runtime」兩段：
-
-1. 以背景資訊、喜好興趣、作息等資料生成奶奶對話腳本
-2. 模擬奶奶回覆，並根據偏離程度與槽位填充情況記錄 RL 資料
-3. 計算 reward，將對話過程轉成 `(state, action, reward, next_state)` 訓練樣本
-4. 交給 DQN 或 Q-learning 訓練策略模型
-5. 用實際的 RL runtime 根據槽位進度與偏離訊號選下一個劇本，並輸出家屬摘要
-
-其中前 1 到 3 步偏重研究與資料建立，第 4 到 5 步則是目前已能實跑的決策與摘要流程。
-
-這也正是 AI 輕量化最適合發揮的地方：
-
-- 依賴 OpenAI API
-- 使用 `SentenceTransformer` 與 `torch`
-- 有多輪對話決策成本
-- 有摘要與結構化資訊提取需求
-
-因此，這個專案非常適合討論 AI 輕量化，因為它同時具備：
-
-- 對話生成成本
-- 向量相似度計算成本
-- 強化學習訓練成本
-- 多模組、多輸出檔案的工程複雜度
-
-## 4. 專案目前可辨識的架構
-
-依照目前原始碼、輸出檔與新補上的 runtime，專案架構如下：
-
-### 4.1 腳本生成
-
-`script_generator.py`
-
-- 來源維度：`背景資訊`、`喜好興趣`、`作息`
-- 目標槽位：`用藥狀況`、`睡眠狀態`、`作息活動`、`飲食狀況`
-- 組合結果：`3 × 4 = 12` 組腳本
-- 每個腳本包含多輪 child / grandma 對話步驟
-
-### 4.2 對話模擬
-
-`dialogue_simulator.py`
-
-- 用 `SentenceTransformer` 計算語意相似度
-- 依相似度轉成偏離程度 `0~3`
-- 若偏離程度過高，會切換到轉場腳本
-- 同時記錄 RL 訓練所需的 `state/action/reward requirements`
-
-### 4.3 Reward 設計
-
-`R_data.py`
-
-- 即時獎勵由三部分構成：
-  - 槽位是否有填到
-  - 偏離程度的獎懲
-  - 與目標腳本距離是否改善
-- 終端獎勵則考慮：
-  - 是否完成所有槽位
-  - 對話長度是否過長
-  - 平均偏離程度是否過高
-
-### 4.4 RL 訓練
-
-`integrated_dqn_train.py`
-
-- 目標是訓練 12 個腳本動作的選擇策略
-- 使用 `state_dim=5`、`action_dim=12`
-- 現在已改成 **RL 預設走 DQN**，但可以透過參數切換為 **tabular Q-learning**
-- 兩種演算法共用同一個主訓練器與相同輸入資料格式
-
-#### 演算法切換方式
-
-```powershell
-py integrated_dqn_train.py --algorithm dqn --input rl_data_20250721_142929.json
-py integrated_dqn_train.py --algorithm q_learning --input rl_data_20250721_142929.json
+```mermaid
+flowchart TD
+    A[導覽說明頁] --> B[登入頁]
+    B --> C[功能入口頁]
+    C --> D[家屬模式]
+    C --> E[長者模式]
+    C --> F[報告模式]
+    D --> G[聊天 + 填槽 + 摘要]
+    E --> H[純聊天介面]
+    F --> I[視覺儀表板]
+    A --> J[右上角登入後台]
+    B --> J
+    C --> J
+    D --> J
+    E --> J
+    F --> J
+    J --> K[後台管理]
 ```
 
-### 4.5 實際對話 Runtime
+### 2.2 各頁面用途
 
-`virtual_child_rl_system.py`
+| 頁面 | 主要輸入 | 主要輸出 | 用意 |
+|---|---|---|---|
+| 導覽說明頁 | 無 | 系統介紹、三組家庭畫像預覽 | 先讓使用者理解產品與角色設定 |
+| 登入頁 | 帳號、密碼 | 使用者 session | 依家庭角色登入系統 |
+| 功能入口頁 | 點選模式 | 導向家屬 / 長者 / 報告 | 避免所有資訊都塞在同一頁 |
+| 家屬模式 | 對話輸入 | 對話、填槽、分析結果、照護摘要 | 給家屬完整工作台 |
+| 長者模式 | 對話輸入 | 純聊天畫面 | 給長者更單純、更像和兒女聊天的體驗 |
+| 報告模式 | 無或看歷史紀錄 | 視覺儀表板、對話紀錄、進度與提醒 | 給家屬或照護者快速巡檢 |
+| 後台管理 | JSON、表單、帳號資料 | 更新畫像、提示詞、帳號、API、紀錄 | 讓系統可配置、可維運 |
 
-- 載入既有 12 組劇本與 RL 訓練資料
-- 將對話狀態整理成 `4 個槽位進度 + 1 個偏離旗標`
-- 實際讓 DQN / Q-learning 參與「下一個劇本」選擇
-- 用 `SentenceTransformer` 偵測偏離，失敗時自動 fallback 到 token overlap
-- 用規則式槽位抽取蒐集睡眠、飲食、作息、用藥資訊
-- 輸出家屬摘要 Markdown 與完整 transcript JSON
+---
 
-#### Runtime 執行方式
+## 3. 核心做法
 
-```powershell
-py virtual_child_rl_system.py --mode demo --algorithm dqn
-py virtual_child_rl_system.py --mode demo --algorithm q_learning
-py virtual_child_rl_system.py --mode interactive --algorithm dqn
+### 3.1 設計原則
+
+系統不是用單一 LLM 直接自由聊天，而是採用下列混合設計：
+
+1. `RL` 決定下一個優先對話方向
+2. `規則 / 正則` 先做快速填槽與快回覆
+3. `LLM` 背景補上情緒分析、槽值候選與自然化回覆
+4. `Persona` 控制稱呼、關係、語氣與隱性引導方式
+5. `後台` 讓這些設定能被修改，而不是寫死在程式裡
+
+### 3.2 為什麼要用 RL
+
+LLM 很擅長理解和生成，但不一定穩定地追蹤「四大照護槽位到底還缺哪一塊」。  
+RL 在這個專案裡的角色不是生成句子，而是做「策略選擇」：
+
+- 下一步優先追哪個槽位
+- 用哪一份 script 比較合適
+- 高偏離時要不要轉場
+- 尚未完成的槽位要不要優先補齊
+
+也就是說：
+
+- `RL` 負責「方向」
+- `LLM` 負責「理解與說法」
+
+---
+
+## 4. 系統架構圖
+
+```mermaid
+graph LR
+    U[使用者 / 長者 / 家屬] --> FE[前端 SPA<br/>導覽 / 登入 / 入口 / 家屬 / 長者 / 報告 / 後台]
+    FE --> API[care_companion_server.py]
+
+    API --> AUTH[平台狀態層<br/>platform_state.py]
+    AUTH --> STATEFILE[artifacts/platform_state.json]
+
+    API --> RUNTIME[virtual_child_rl_system.py]
+    RUNTIME --> RL[RL Runtime<br/>DQN / Q-learning]
+    RUNTIME --> SLOT[規則填槽 / 快回覆]
+    RUNTIME --> PERSONA[家庭畫像<br/>persona_profiles.py]
+    RUNTIME --> LLM[llm_runtime.py<br/>分析 / 生成]
+
+    LLM --> OLLAMA[qwen3:8b<br/>Ollama API]
+    LLM --> LMSTUDIO[qwen3.5-9b-claude<br/>OpenAI-compatible API]
+
+    RUNTIME --> REPORT[照護摘要 / 對話紀錄 / 報告資料]
+    API --> REPORT
 ```
 
-## 5. 已找到且已驗證的輸出成果
+---
 
-根據資料夾中的 JSON 檔，專案目前至少產出過以下結果：
+## 5. 資訊流
 
-- 12 份奶奶對話腳本
-- 平均每份腳本 `6.33` 步
-- 最少 `5` 步，最多 `10` 步
-- 1 份 59 輪的對話模擬樣本
-- 1 份對應的 RL 訓練資料
-- 2 份新的 RL runtime 示範成果（DQN / Q-learning 各 1）
+### 5.1 即時對話資訊流
 
-### 5.1 歷史樣本對話統計
+```mermaid
+sequenceDiagram
+    participant User as 長者 / 家屬
+    participant FE as 前端
+    participant API as Server API
+    participant RT as RL Runtime
+    participant LLM as LLM Orchestrator
+    participant DB as Platform State
 
-- 對話輪數：`59`
-- 平均相似度：`0.5827`
-- 平均偏離程度：`1.2034`
-- 使用轉場腳本次數：`10`
-- 轉場腳本回合數：`27`
-- 成功填到槽位的回合數：`21`
-
-### 5.2 偏離程度分布
-
-- Level 0：`29`
-- Level 1：`5`
-- Level 2：`9`
-- Level 3：`16`
-
-### 5.3 最終槽位填充數量
-
-- `用藥狀況`：6
-- `睡眠狀態`：4
-- `作息活動`：4
-- `飲食狀況`：5
-
-說明：這些數字來自資料夾中既有的 `progress.json`、`pure_dialogue_20250721_142929.json`、`rl_data_20250721_142929.json`，不是假設值。
-
-### 5.4 新增的實跑成果
-
-已新增並驗證：
-
-- `artifacts/runtime_demo/runtime_session_20260315_153557.json`
-- `artifacts/runtime_demo/caregiver_summary_20260315_153557.md`
-- `artifacts/runtime_demo/runtime_session_20260315_153754.json`
-- `artifacts/runtime_demo/caregiver_summary_20260315_153754.md`
-
-這代表專案現在不只是「有資料可展示」，而是能真的跑出：
-
-- RL 決策過的下一句對話
-- 偏離後的重聚焦
-- 家屬 / 照護端摘要
-
-## 6. 與說明書 / 簡報的對齊程度
-
-我已將 `專案說明/` 內的 `docx` 與 `pptx` 內容抽出並逐項比對，結論是：
-
-- 核心概念已對齊：`虛擬兒女`、`隱性聊天`、`健康槽位`、`偏離偵測`、`RL 選劇本`
-- 實作已對齊：DQN 為主、可切 Q-learning、可輸出家屬摘要
-- 已補成本地完整 demo：正式互動前端、瀏覽器語音、家屬 dashboard
-- 後續仍可擴充：多使用者權限、正式雲端 API、跨期趨勢看板
-
-完整對齊表請看：
-
-- `docs/SPEC_ALIGNMENT.md`
-
-## 7. 為什麼這個專案值得做 AI 輕量化
-
-### 7.1 成本面
-
-目前流程對大型模型與 embedding 都有依賴。如果未來要部署成實際服務，成本會來自：
-
-- 腳本生成時的 API 呼叫
-- 對話模擬時的 API 呼叫
-- 相似度編碼模型的推論
-- 訓練與評估流程的額外資源
-
-但現在已經多了一條更輕的路：
-
-- 劇本可預先生成
-- RL runtime 可直接重用既有劇本與訓練資料
-- 槽位抽取已可先用規則式完成 base version
-
-### 7.2 延遲面
-
-如果系統要做成陪伴型、即時型長照對話機器人，高延遲會直接傷害使用體驗。
-
-### 7.3 部署面
-
-現況依賴：
-
-- `SentenceTransformer` 與 `torch`
-- 新劇本生成仍需要 `openai` 與 `python-docx`
-- 若要完整重建原始資料流程，仍需要 `data/` 來源檔
-
-但相較前一版，專案已不再是只有分析與文件化，而是能夠執行輕量 runtime。
-
-## 8. 建議的 AI 輕量化路線
-
-以下是最適合這個專案的輕量化順序。
-
-### 8.1 第一階段：先把系統變乾淨
-
-- 移除硬編碼金鑰，改用環境變數
-- 補齊 `README`、測試腳本與可行性報告
-- 補上依賴清單與資料說明
-
-這一階段不是「模型變小」，但它是後續一切輕量化的前提。
-
-### 8.2 第二階段：推論與資料流程輕量化
-
-- 把 LLM 產生的腳本改成「預生成 + 快取」
-- 對相似度模型做批次化、快取或換成更小模型
-- 把規則型判斷優先化，減少每輪都呼叫大模型
-- 將槽位填充抽取改為規則 + 小模型混合式設計
-
-### 8.3 第三階段：模型壓縮
-
-- Quantization：把可量化模型壓到 8-bit / 4-bit
-- Distillation：把大模型知識蒸餾到小模型
-- PEFT / LoRA：保留能力但降低訓練成本
-- ONNX / TensorRT / llama.cpp：針對推論做部署優化
-
-### 8.4 第四階段：產品化導向
-
-- 將「腳本生成」與「即時對話」拆成離線 / 線上兩段
-- 對陪伴型功能保留高品質模型
-- 對結構化任務（提醒、追問、分類、槽位填寫）改用小模型或規則
-- 對照護現場設備限制，設計雲端版與邊緣版兩種架構
-
-## 9. 可行性測試摘要
-
-我已經補上一個檢查腳本：
-
-```powershell
-py tools/feasibility_check.py
+    User->>FE: 輸入一句話
+    FE->>API: /api/chat
+    API->>RT: respond_fast(message)
+    RT->>RT: 規則填槽 + 偏離判斷 + RL 選 script
+    RT-->>API: 先回快速回覆
+    API-->>FE: 立即顯示秒回內容
+    RT->>LLM: 背景分析與自然化生成
+    LLM-->>RT: 情緒 / 槽值候選 / 更自然回覆
+    RT->>DB: 更新 conversation_records
+    FE->>API: /api/session_state 輪詢
+    API-->>FE: 背景完成後的新摘要與新回覆
 ```
 
-最新檢查結果：
+### 5.2 後台資訊流
 
-| 項目 | 結果 | 說明 |
+```mermaid
+flowchart LR
+    Admin[管理員] --> Console[後台頁面]
+    Console --> A1[畫像 JSON 編輯]
+    Console --> A2[提示詞調整]
+    Console --> A3[帳號管理]
+    Console --> A4[對話紀錄管理]
+    Console --> A5[API / 模型設定]
+    A1 --> State[platform_state.py]
+    A2 --> State
+    A3 --> State
+    A4 --> State
+    A5 --> State
+    State --> Json[artifacts/platform_state.json]
+    Json --> Runtime[下一次登入 / 建立 session 時載入]
+```
+
+---
+
+## 6. 四大槽位與用途
+
+系統目前固定追蹤四大照護槽位：
+
+| 主槽位 | 子槽位 | 用意 |
 |---|---|---|
-| Python 語法檢查 | 通過 | 5 支主要 Python 檔皆可做語法級檢查 |
-| 必要套件 | 通過 | `numpy`、`torch`、`sentence_transformers`、`pandas` 可被發現 |
-| 可選套件 | 通過 | `.venv` 環境內已補上 `openai`、`python-docx` |
-| 本地模組 | 通過 | 已補上 `dueling_dqn.py`、`tabular_q_learning.py`、互動前端與實跑 runtime |
-| 參考資料夾 | 存在 | `專案說明/` 已有 `docx` 與 `pptx` 參考檔 |
-| 範例輸出 | 存在 | 已找到腳本、對話、RL 樣本、Web 前端與 runtime demo |
-| 金鑰外洩 | 已修正 | 已改為從 `OPENAI_API_KEY` 讀取 |
+| 用藥狀況 | 量血壓情況、服藥情況、身體不適、用藥時間 | 追蹤服藥與身體警訊 |
+| 睡眠狀態 | 起床時間、睡眠時間、小睡情況、睡眠品質 | 觀察作息與睡眠品質 |
+| 作息活動 | 上廁所情況、居家運動、外出情況、洗澡情況、喝水情況、看電視情況 | 評估活動量與日常功能 |
+| 飲食狀況 | 三餐時間、食物內容、廚房使用、冰箱使用 | 觀察飲食與生活自理程度 |
 
-### 目前結論
+### 槽位輸入與輸出
 
-本專案在 `.venv` 環境下已屬於「可重現（ready）」：
+| 項目 | 輸入 | 輸出 |
+|---|---|---|
+| 規則填槽 | 長者訊息文字 | `filled_slots`、`slot_value_details` |
+| LLM 補充 | 長者訊息、最近對話、persona、當前槽位 | `slot_candidates`、`emotion`、`concerns` |
+| 報告顯示 | 已填槽資料 | 完成度、值摘要、提醒與焦點建議 |
 
-- 文件整理、架構重建、成果展示：可行
-- DQN / Q-learning runtime 對話示範：可行
-- 家屬摘要輸出：可行
-- 正式互動前端、瀏覽器語音與家屬 dashboard：可行
-- 重新生成新劇本與完整雲端部署：可進一步擴充
+---
 
-目前仍值得持續補強的部分是：
+## 7. 強化學習用途說明
 
-- 多使用者與正式權限管理
-- 雲端 API 化
-- 長期照護趨勢 dashboard
+### 7.1 RL 在本專案中的定位
 
-## 10. GitHub 上傳前檢查清單
+RL 不負責逐字生成回覆，而是負責：
 
-- [x] 移除硬編碼 OpenAI API key
-- [x] 新增 `.env.example`
-- [x] 新增 `.gitignore`
-- [x] 新增自動化可行性檢查腳本
-- [x] 整理詳細 README
-- [x] 產出可行性報告
-- [x] 補上說明書 / 簡報對齊表
-- [x] 建立可實跑的 RL runtime
-- [x] 製作靜態成果網頁
-- [ ] 建立 GitHub 遠端倉庫
-- [ ] 推送到 GitHub
+- 選 `下一個 script`
+- 選 `下一個 target_slot`
+- 選 `是否轉場`
+- 優先補尚未完成的槽位
 
-最後兩步是否能完成，取決於本機是否已具備 GitHub CLI 或可用的 GitHub 驗證資訊。
+### 7.2 狀態、動作、獎勵
 
-## 11. 建議的下一步
+| 元素 | 內容 | 說明 |
+|---|---|---|
+| State | 5 維向量 | `4 個槽位是否已有資料 + 1 個上一輪是否高偏離` |
+| Action | 12 個 script action | 對應 12 份對話劇本 |
+| Reward | 由 `R_data.py` 計算 | 綜合槽位完成、偏離、轉場與對話品質 |
 
-如果你要把這個專案繼續往研究或產品化推進，最建議的順序是：
+### 7.3 訓練與執行
 
-1. 把 `care_companion_server.py` 擴成多使用者正式 API
-2. 把目前單次摘要升級成跨日 / 跨週照護趨勢板
-3. 補齊更多個案資料與測試語料
-4. 規劃 Hugging Face / 雲端部署版
-5. 再做真正的 AI 輕量化驗證，如量化、蒸餾、推論延遲比較
+| 階段 | 檔案 | 用途 |
+|---|---|---|
+| 訓練資料 | `rl_data_*.json` | 來自模擬對話與 reward 計算 |
+| DQN 訓練 | `integrated_dqn_train.py` | 訓練神經網路版 policy |
+| Q-learning 訓練 | `integrated_dqn_train.py --algorithm q_learning` | 訓練表格式 policy |
+| 線上推論 | `virtual_child_rl_system.py` | 依目前狀態選出下一份 script |
 
-## 12. 這次新增的成果
+### 7.4 為什麼不是只用 LLM
 
-- `README.md`
-- `docs/FEASIBILITY_REPORT.md`
-- `docs/SPEC_ALIGNMENT.md`
-- `tools/feasibility_check.py`
-- `artifacts/feasibility_report.json`
-- `site/index.html`
-- `site/styles.css`
-- `site/app.js`
-- `.env.example`
-- `virtual_child_rl_system.py`
-- `care_companion_server.py`
-- `care_frontend/`
+如果只用 LLM：
 
-## 13. 快速啟動
+- 對話可能自然，但不一定穩定補齊四大槽位
+- 不容易比較策略優劣
+- 不容易控制追問優先順序
 
-### 13.1 建立與啟用虛擬環境
+如果加入 RL：
 
-如果還沒建立虛擬環境，可在專案根目錄執行：
+- 可以明確比較 `DQN` 和 `Q-learning`
+- 可以在缺資料時優先追對應槽位
+- 可以把「選策略」和「說法自然化」拆開
+
+---
+
+## 8. Persona 與家庭畫像
+
+系統目前內建 3 組家庭畫像，每組有：
+
+- 兒女姓名、角色、職業、個性、說話風格
+- 長者姓名、角色、生活狀態、健康重點、興趣
+- 家庭關係、共同回憶、引導風格
+
+### 8.1 三組內建畫像
+
+| ID | 家庭畫像 | 關係 |
+|---|---|---|
+| `daughter_teacher_mother` | 長女曉雯與母親玉蘭 | 曉雯是玉蘭的長女，玉蘭是曉雯的母親 |
+| `son_engineer_father` | 次子家豪與父親正雄 | 家豪是正雄的次子，正雄是家豪的父親 |
+| `daughter_nurse_mother` | 小女兒雅婷與母親秀琴 | 雅婷是秀琴的小女兒，秀琴是雅婷的母親 |
+
+### 8.2 Persona 的實際作用
+
+Persona 不只是顯示資料，而是真的會進入：
+
+- 開場稱呼
+- 快回覆的語氣
+- LLM 分析 prompt
+- LLM 生成 prompt
+- 家屬摘要與報告儀表板
+
+---
+
+## 9. 預設帳號
+
+系統目前會在首次啟動時建立 `artifacts/platform_state.json`，並生成以下示範帳號。
+
+### 9.1 家庭帳號 6 組
+
+| 家庭 | 角色 | 帳號 | 密碼 |
+|---|---|---|---|
+| 長女曉雯與母親玉蘭 | 家屬 | `xiaowen.family` | `XWFamily#2026` |
+| 長女曉雯與母親玉蘭 | 長者 | `yulan.elder` | `YuLan#2026` |
+| 次子家豪與父親正雄 | 家屬 | `jiahao.family` | `JHFamily#2026` |
+| 次子家豪與父親正雄 | 長者 | `zhengxiong.elder` | `ZXElder#2026` |
+| 小女兒雅婷與母親秀琴 | 家屬 | `yating.family` | `YTFamily#2026` |
+| 小女兒雅婷與母親秀琴 | 長者 | `xiuqin.elder` | `XiuQin#2026` |
+
+### 9.2 後台帳號
+
+| 角色 | 帳號 | 密碼 |
+|---|---|---|
+| 管理員 | `admin.console` | `Admin#2026` |
+
+> 注意：目前這是 demo / prototype 等級的本機帳號系統，密碼儲存在 JSON 中，方便展示與修改，不適合直接上正式生產環境。
+
+---
+
+## 10. 詳細輸入輸出
+
+## 10.1 主要前端模式
+
+| 模式 | 主要輸入 | 主要輸出 |
+|---|---|---|
+| 家屬模式 | 長者回覆文字、登入家庭帳號 | 對話區、互動摘要、家庭關係畫像、分析結果、四大槽位進度、照護提醒、家屬摘要 |
+| 長者模式 | 長者回覆文字、登入長者帳號 | 純聊天區 |
+| 報告模式 | 已存在的對話紀錄 | 最新互動概況、歷史紀錄、對話時間線、家庭畫像、分析結果、四大槽位進度、照護提醒、家屬摘要 |
+| 後台模式 | 畫像 JSON、提示詞、帳號資料、模型設定 | 更新平台設定並寫回 `platform_state.json` |
+
+## 10.2 主要 API
+
+### `/api/bootstrap`
+
+用途：前端初始載入導覽頁、登入頁和示範帳號。
+
+輸入：
+
+```json
+{}
+```
+
+輸出：
+
+```json
+{
+  "demo_accounts": [
+    {
+      "username": "xiaowen.family",
+      "password": "XWFamily#2026",
+      "display_name": "曉雯家屬帳號",
+      "role": "family",
+      "persona_profile_id": "daughter_teacher_mother",
+      "persona_label": "長女曉雯與母親玉蘭"
+    }
+  ],
+  "admin_account": {
+    "username": "admin.console",
+    "password": "Admin#2026"
+  },
+  "personas": {},
+  "api_settings": {},
+  "prompt_settings": {}
+}
+```
+
+### `/api/login`
+
+用途：一般使用者登入。
+
+輸入：
+
+```json
+{
+  "username": "xiaowen.family",
+  "password": "XWFamily#2026"
+}
+```
+
+輸出：
+
+```json
+{
+  "auth_token": "token",
+  "user": {
+    "username": "xiaowen.family",
+    "role": "family",
+    "persona_profile_id": "daughter_teacher_mother"
+  },
+  "bootstrap": {}
+}
+```
+
+### `/api/session`
+
+用途：登入後建立新的對話 session。
+
+輸入：
+
+```json
+{
+  "auth_token": "token",
+  "algorithm": "dqn",
+  "llm_enabled": true,
+  "analysis_preset": "qwen35_lmstudio",
+  "generation_preset": "qwen35_lmstudio"
+}
+```
+
+輸出：
+
+```json
+{
+  "session_id": "session-id",
+  "latest_assistant_message": "媽，你今天早上有去練氣功嗎？",
+  "persona_profile": {},
+  "summary": {},
+  "turns": []
+}
+```
+
+### `/api/chat`
+
+用途：送出一輪對話，先回快速回覆，再背景補分析。
+
+輸入：
+
+```json
+{
+  "auth_token": "token",
+  "session_id": "session-id",
+  "message": "我今天早餐吃稀飯，剛剛也有出去走一下。"
+}
+```
+
+輸出：
+
+```json
+{
+  "latest_assistant_message": "媽，有把東西吃一點、喝一點都很重要。順著您剛剛提到的，你早餐都喜歡吃些什麼呢？",
+  "background_processing": true,
+  "latest_analysis": {
+    "status": "pending"
+  },
+  "summary": {},
+  "turns": []
+}
+```
+
+### `/api/session_state`
+
+用途：輪詢背景分析是否完成。
+
+輸入：
+
+```json
+{
+  "auth_token": "token",
+  "session_id": "session-id"
+}
+```
+
+輸出：
+
+```json
+{
+  "background_processing": false,
+  "latest_assistant_message": "背景自然化後的最新回覆",
+  "latest_analysis": {
+    "status": "completed",
+    "summary": "分析摘要"
+  }
+}
+```
+
+### `/api/report`
+
+用途：讀取同一家族的最新報告與歷史紀錄。
+
+輸入：
+
+```json
+{
+  "auth_token": "token"
+}
+```
+
+輸出：
+
+```json
+{
+  "records": [],
+  "latest_session": {
+    "summary": {},
+    "turns": []
+  }
+}
+```
+
+### `/api/admin/state`
+
+用途：後台一次讀出所有管理資料。
+
+輸入：
+
+```json
+{
+  "auth_token": "admin-token"
+}
+```
+
+輸出：
+
+```json
+{
+  "users": [],
+  "personas": {},
+  "prompt_settings": {},
+  "api_settings": {},
+  "conversation_records": []
+}
+```
+
+### 10.3 後台管理 API
+
+| Endpoint | 用途 | 輸入重點 | 輸出 |
+|---|---|---|---|
+| `/api/admin/persona/update` | 更新單一畫像 | `profile_id`, `profile` | `{"ok": true}` |
+| `/api/admin/persona/import` | 批次匯入畫像 JSON | `raw_text` | `{"ok": true}` |
+| `/api/admin/prompts/update` | 更新 prompt 附加指令 | `prompt_settings` | `{"ok": true}` |
+| `/api/admin/users/upsert` | 新增或修改帳號 | `user` | `{"ok": true}` |
+| `/api/admin/users/delete` | 刪除帳號 | `user_id` | `{"ok": true}` |
+| `/api/admin/api/update` | 更新預設演算法與模型設定 | `api_settings` | `{"ok": true}` |
+| `/api/admin/records/delete` | 刪除對話紀錄 | `session_id` | `{"ok": true}` |
+
+---
+
+## 11. 模組與每個檔案的用意
+
+| 檔案 / 目錄 | 用意 | 主要輸入 | 主要輸出 |
+|---|---|---|---|
+| `care_companion_server.py` | 提供整個網站與 API | HTTP Request | 前端頁面、JSON API |
+| `care_frontend/app.js` | 前端單頁流程控制 | 使用者點擊、表單輸入、API 回應 | 導覽頁、登入頁、三種模式、後台畫面 |
+| `care_frontend/styles.css` | 前端樣式系統 | HTML 結構 | 視覺版面 |
+| `virtual_child_rl_system.py` | 核心對話 runtime | 長者訊息、persona、RL policy、prompt settings | 快回覆、背景分析、摘要、turns |
+| `llm_runtime.py` | LLM 連線與 prompt orchestration | persona、對話上下文、槽位資料 | 分析結果、自然化回覆 |
+| `platform_state.py` | 平台資料層 | 帳號、畫像、prompt、API 設定、紀錄 | `platform_state.json` |
+| `persona_profiles.py` | 內建家庭畫像 | profile id | persona profile |
+| `integrated_dqn_train.py` | RL 訓練入口 | `rl_data_*.json` | DQN / Q-learning 模型 |
+| `dueling_dqn.py` | DQN agent | state/action/reward | DQN policy |
+| `tabular_q_learning.py` | Q-learning agent | state/action/reward | Q-table |
+| `R_data.py` | reward 計算 | 對話資料、填槽進度、偏離資訊 | reward |
+| `artifacts/platform_state.json` | 平台持久化資料 | 後台編輯後寫入 | 下次啟動繼續使用 |
+
+---
+
+## 12. LLM 與回覆策略
+
+### 12.1 模型預設
+
+| Preset | Provider | Model | 用途 |
+|---|---|---|---|
+| `qwen3_ollama` | Ollama | `qwen3:8b` | 可用於本地分析 / 生成 |
+| `qwen35_lmstudio` | OpenAI-compatible | `qwen3.5-9b-claude` | 目前預設分析 / 生成模型 |
+
+### 12.2 回覆模式
+
+| 模式 | 做法 | 目的 |
+|---|---|---|
+| 快回覆 | 規則判斷 + persona 語氣 + RL 目標槽位 | 讓畫面先秒回 |
+| 背景分析 | LLM 情緒分析、填槽候選、偏離判斷 | 補理解 |
+| 背景自然化 | LLM 根據 persona 與 target_slot 生成更自然回覆 | 補說法 |
+
+### 12.3 Persona 如何影響 LLM
+
+LLM prompt 會帶入：
+
+- child / elder 姓名與角色
+- preferred address，例如 `媽`、`爸`
+- personality
+- speaking_style
+- care_habits
+- relationship dynamic
+- guidance_style
+
+因此回覆會比較像：
+
+- `媽，我有在聽，您慢慢說就好。`
+- `爸，先記下來，我順便確認一下今天這餐大概幾點吃的呢？`
+
+而不是一般客服式問句。
+
+---
+
+## 13. 安裝與執行
+
+### 13.1 建立虛擬環境
 
 ```powershell
+Set-Location 'C:\Users\15507\Desktop\老人'
 py -3.13 -m venv .venv
-```
-
-啟用方式：
-
-```powershell
 .\.venv\Scripts\Activate.ps1
-```
-
-安裝依賴：
-
-```powershell
 pip install -r requirements.txt
 ```
 
-### 13.2 設定 API 金鑰（只有生成新劇本時需要）
-
-PowerShell：
+如果 PowerShell 阻擋：
 
 ```powershell
-$env:OPENAI_API_KEY="your_openai_api_key_here"
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\.venv\Scripts\Activate.ps1
 ```
 
-### 13.3 執行可行性檢查
+### 13.2 啟動網站
 
 ```powershell
-.\.venv\Scripts\python.exe tools\feasibility_check.py
+Set-Location 'C:\Users\15507\Desktop\老人'
+.\.venv\Scripts\python.exe care_companion_server.py --open-browser
 ```
 
-### 13.4 執行 RL runtime
+瀏覽器網址：
+
+```text
+http://127.0.0.1:8000
+```
+
+### 13.3 CLI runtime 測試
 
 ```powershell
 .\.venv\Scripts\python.exe virtual_child_rl_system.py --mode demo --algorithm dqn
@@ -372,28 +593,114 @@ $env:OPENAI_API_KEY="your_openai_api_key_here"
 .\.venv\Scripts\python.exe virtual_child_rl_system.py --mode interactive --algorithm dqn
 ```
 
-### 13.5 啟動正式互動前端
+### 13.4 RL 訓練測試
 
 ```powershell
-.\.venv\Scripts\python.exe care_companion_server.py --open-browser
+.\.venv\Scripts\python.exe integrated_dqn_train.py --algorithm dqn --input rl_data_20250721_142929.json --epochs 5 --save-interval 1 --batch-size 16 --output-dir outputs_dqn_smoke
+.\.venv\Scripts\python.exe integrated_dqn_train.py --algorithm q_learning --input rl_data_20250721_142929.json --epochs 5 --save-interval 1 --batch-size 16 --output-dir outputs_q_learning_smoke
 ```
 
-啟動後瀏覽器會開啟：
+### 13.5 可行性檢查
 
-```text
-http://127.0.0.1:8000
-```
-
-### 13.6 開啟成果網頁
-
-直接用瀏覽器打開：
-
-```text
-site/index.html
+```powershell
+.\.venv\Scripts\python.exe tools\feasibility_check.py
 ```
 
 ---
 
-如果把這份 README 濃縮成一句話，這個專案目前最適合被定位成：
+## 14. 建議測試清單
 
-> 一個以高齡對話模擬與強化學習為主題、已能實跑 DQN / Q-learning、正式互動前端、瀏覽器語音與家屬 dashboard 的研究型原型；目前已具備完整本地 demo，下一步是多使用者與雲端化。
+### 14.1 前台流程
+
+1. 打開首頁，確認先看到導覽說明頁
+2. 進入登入頁，使用示範帳號登入
+3. 進入功能入口頁
+4. 分別點進 `家屬` / `長者` / `報告`
+5. 右上角進入 `登入後台`
+
+### 14.2 對話流程
+
+1. 建立 session
+2. 輸入一段與飲食或活動相關的文字
+3. 確認畫面先秒回
+4. 等待背景分析完成
+5. 確認 `四大槽位進度` 和 `報告模式` 有更新
+
+### 14.3 後台流程
+
+1. 後台登入
+2. 修改其中一組 persona JSON
+3. 儲存後重新登入該家庭帳號
+4. 確認新稱呼 / 新畫像已生效
+5. 修改 prompt settings
+6. 修改或新增帳號
+7. 刪除舊對話紀錄
+
+---
+
+## 15. 目前限制
+
+### 15.1 帳號系統
+
+目前是 demo 級做法：
+
+- 明文密碼
+- 本機 JSON 儲存
+- 記憶體 token
+- 無正式 RBAC / session 過期策略
+
+### 15.2 畫像持久化
+
+畫像與設定目前存於：
+
+```text
+artifacts/platform_state.json
+```
+
+適合原型展示與功能驗證，但正式產品建議改成資料庫。
+
+### 15.3 LLM 分析摘要
+
+雖然 prompt 已要求繁中，但部分模型回傳摘要仍可能夾帶英文，需要再做輸出正規化。
+
+### 15.4 語音與多端同步
+
+目前網站版本以文字互動為主，尚未完成：
+
+- 真正的 STT / TTS 服務端整合
+- 手機端同步登入
+- 雲端資料庫
+- 正式權限管理
+
+---
+
+## 16. 後續可擴充方向
+
+1. 把 `platform_state.json` 改成 SQLite / PostgreSQL
+2. 加入密碼雜湊與正式登入機制
+3. 增加長期記憶，讓虛擬兒女記得上次聊過的家族事件
+4. 讓 LLM 不只判斷子槽位，還能抽出更完整結構化值
+5. 加入音訊 I/O 與行動端 UI
+6. 增加更多家庭畫像模板與後台上傳格式驗證
+
+---
+
+## 17. 快速總結
+
+這個專案目前已具備以下能力：
+
+- `導覽頁 -> 登入 -> 功能入口 -> 家屬 / 長者 / 報告 -> 後台`
+- `6 個家庭示範帳號 + 1 個後台帳號`
+- `3 組可切換家庭畫像`
+- `DQN / Q-learning 雙策略`
+- `快回覆 + 背景 LLM 分析/生成`
+- `家屬摘要與報告儀表板`
+- `後台修改畫像、提示詞、帳號、對話紀錄、API 設定`
+
+如果你要把這份專案拿去做簡報、交付或展示，這份 README 已經可以作為：
+
+- 產品說明文件
+- 系統架構文件
+- API 參考文件
+- 操作手冊
+- 專案交付說明
