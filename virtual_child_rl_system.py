@@ -6,6 +6,7 @@ import logging
 import random
 import re
 import threading
+from copy import deepcopy
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
@@ -205,6 +206,7 @@ class RuntimeSession:
     model_path: str
     persona_profile_id: str = DEFAULT_PERSONA_PROFILE_ID
     persona_profile: Dict[str, Any] = field(default_factory=dict)
+    prompt_settings: Dict[str, Any] = field(default_factory=dict)
     turns: List[RuntimeTurn] = field(default_factory=list)
     filled_slots: Dict[str, List[str]] = field(default_factory=dict)
     slot_value_details: Dict[str, Dict[str, List[str]]] = field(default_factory=dict)
@@ -451,6 +453,8 @@ class VirtualChildRLSystem:
         analysis_preset: str = DEFAULT_ANALYSIS_PRESET,
         generation_preset: str = DEFAULT_GENERATION_PRESET,
         persona_profile_id: str = DEFAULT_PERSONA_PROFILE_ID,
+        persona_profile_data: Dict[str, Any] | None = None,
+        prompt_settings: Dict[str, Any] | None = None,
     ) -> None:
         self.script_file = script_file or find_latest_file("grandma_session_*/*/奶奶對話劇本_*.json")
         self.training_file = training_file or find_latest_file("rl_data_*.json")
@@ -480,13 +484,14 @@ class VirtualChildRLSystem:
                 generation_config=build_endpoint_config(generation_preset, fallback=DEFAULT_GENERATION_PRESET),
             )
             llm_status = self.llm.status_dict()
-        persona_profile = get_persona_profile(persona_profile_id)
+        persona_profile = deepcopy(persona_profile_data) if persona_profile_data else get_persona_profile(persona_profile_id)
         self.session = RuntimeSession(
             algorithm=self.policy.algorithm,
             script_file=str(self.script_file),
             model_path=str(self.policy.model_path),
             persona_profile_id=persona_profile["id"],
             persona_profile=persona_profile,
+            prompt_settings=dict(prompt_settings or {}),
             llm_enabled=llm_enabled,
             llm_status=llm_status,
         )
@@ -761,6 +766,7 @@ class VirtualChildRLSystem:
         try:
             analysis = self.llm.analyze_turn(
                 persona_context=self.persona_profile,
+                prompt_overrides=self.session.prompt_settings,
                 elder_message=elder_message,
                 current_script=source_script,
                 current_step=source_step,
@@ -774,6 +780,7 @@ class VirtualChildRLSystem:
             )
             generation = self.llm.generate_reply(
                 persona_context=self.persona_profile,
+                prompt_overrides=self.session.prompt_settings,
                 elder_message=elder_message,
                 selected_script=selected_script,
                 reference_reply=reference_reply,
@@ -1046,6 +1053,7 @@ class VirtualChildRLSystem:
                 if self.llm.use_fused_turns:
                     analysis, generation = self.llm.analyze_and_generate_turn(
                         persona_context=self.persona_profile,
+                        prompt_overrides=self.session.prompt_settings,
                         elder_message=elder_message,
                         current_script=self.scripts_by_id[turn.script_id],
                         current_step={
@@ -1068,6 +1076,7 @@ class VirtualChildRLSystem:
                 else:
                     analysis = self.llm.analyze_turn(
                         persona_context=self.persona_profile,
+                        prompt_overrides=self.session.prompt_settings,
                         elder_message=elder_message,
                         current_script=self.scripts_by_id[turn.script_id],
                         current_step={
@@ -1084,6 +1093,7 @@ class VirtualChildRLSystem:
                     )
                     generation = self.llm.generate_reply(
                         persona_context=self.persona_profile,
+                        prompt_overrides=self.session.prompt_settings,
                         elder_message=elder_message,
                         selected_script=self.current_script,
                         reference_reply=next_message,

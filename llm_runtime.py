@@ -54,6 +54,15 @@ DEFAULT_ANALYSIS_PRESET = "qwen35_lmstudio"
 DEFAULT_GENERATION_PRESET = "qwen35_lmstudio"
 
 
+def set_model_preset_overrides(overrides: Dict[str, Dict[str, Any]] | None) -> None:
+    if not overrides:
+        return
+    for preset_name, values in overrides.items():
+        if preset_name not in MODEL_PRESETS or not isinstance(values, dict):
+            continue
+        MODEL_PRESETS[preset_name].update(values)
+
+
 @dataclass
 class SlotCandidate:
     slot: str
@@ -320,6 +329,7 @@ class HybridLLMOrchestrator:
         self,
         *,
         persona_context: Dict[str, Any],
+        prompt_overrides: Dict[str, Any] | None,
         elder_message: str,
         current_script: Dict[str, Any],
         current_step: Dict[str, Any],
@@ -348,6 +358,8 @@ class HybridLLMOrchestrator:
             "Follow current_target_slot strictly. "
             "Use pending_items to guide the next follow-up naturally."
         )
+        if prompt_overrides and prompt_overrides.get("fused_appendix"):
+            system_prompt = f"{system_prompt}\n\nAdditional instruction:\n{prompt_overrides['fused_appendix']}"
         user_payload = {
             "task": "analyze_and_generate",
             "persona_context": persona_context,
@@ -407,6 +419,7 @@ class HybridLLMOrchestrator:
         self,
         *,
         persona_context: Dict[str, Any],
+        prompt_overrides: Dict[str, Any] | None,
         elder_message: str,
         current_script: Dict[str, Any],
         current_step: Dict[str, Any],
@@ -424,6 +437,8 @@ class HybridLLMOrchestrator:
             "All natural-language fields must be in Traditional Chinese. "
             "Use persona_context to understand the family relationship and the elder's usual behavior."
         )
+        if prompt_overrides and prompt_overrides.get("analysis_appendix"):
+            system_prompt = f"{system_prompt}\n\nAdditional instruction:\n{prompt_overrides['analysis_appendix']}"
         user_payload = {
             "task": "analyze_elder_reply",
             "persona_context": persona_context,
@@ -471,6 +486,7 @@ class HybridLLMOrchestrator:
         self,
         *,
         persona_context: Dict[str, Any],
+        prompt_overrides: Dict[str, Any] | None,
         elder_message: str,
         selected_script: Dict[str, Any],
         reference_reply: str,
@@ -495,6 +511,8 @@ class HybridLLMOrchestrator:
             "Stay in character with persona_context, including the child role, family relationship, preferred address, and speaking habits. "
             "Follow current_target_slot strictly and use pending_items."
         )
+        if prompt_overrides and prompt_overrides.get("generation_appendix"):
+            system_prompt = f"{system_prompt}\n\nAdditional instruction:\n{prompt_overrides['generation_appendix']}"
         user_payload = {
             "task": "generate_virtual_child_reply",
             "persona_context": persona_context,
