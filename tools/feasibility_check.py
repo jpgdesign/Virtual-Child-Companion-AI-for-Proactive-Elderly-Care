@@ -13,6 +13,7 @@ SOURCE_FILES = [
     "integrated_dqn_train.py",
     "R_data.py",
     "script_generator.py",
+    "virtual_child_rl_system.py",
 ]
 REQUIRED_LOCAL_MODULES = [
     "dueling_dqn.py",
@@ -76,11 +77,14 @@ def find_reference_status() -> dict:
 def find_sample_files() -> dict:
     session_dir = ROOT / "grandma_session_20250713_185829"
     script_json_candidates = sorted(session_dir.rglob("*.json"), key=lambda p: p.stat().st_size, reverse=True)
+    runtime_demo_dir = ROOT / "artifacts" / "runtime_demo"
+    runtime_demo_files = sorted(runtime_demo_dir.glob("*")) if runtime_demo_dir.exists() else []
     return {
         "session_dir_exists": session_dir.exists(),
         "script_json_candidates": [str(path.relative_to(ROOT)) for path in script_json_candidates],
         "dialogue_json_exists": (ROOT / "pure_dialogue_20250721_142929.json").exists(),
         "rl_json_exists": (ROOT / "rl_data_20250721_142929.json").exists(),
+        "runtime_demo_files": [str(path.relative_to(ROOT)) for path in runtime_demo_files],
     }
 
 
@@ -88,12 +92,22 @@ def inspect_sample_outputs() -> dict:
     progress = json.loads((ROOT / "grandma_session_20250713_185829" / "progress.json").read_text(encoding="utf-8"))
     dialogue = json.loads((ROOT / "pure_dialogue_20250721_142929.json").read_text(encoding="utf-8"))
     rl = json.loads((ROOT / "rl_data_20250721_142929.json").read_text(encoding="utf-8"))
+    runtime_demo_dir = ROOT / "artifacts" / "runtime_demo"
+    runtime_transcript = None
+    runtime_summary = None
+    if runtime_demo_dir.exists():
+        transcript_candidates = sorted(runtime_demo_dir.glob("runtime_session_*.json"), key=lambda p: p.stat().st_mtime)
+        summary_candidates = sorted(runtime_demo_dir.glob("caregiver_summary_*.md"), key=lambda p: p.stat().st_mtime)
+        if transcript_candidates:
+            runtime_transcript = json.loads(transcript_candidates[-1].read_text(encoding="utf-8"))
+        if summary_candidates:
+            runtime_summary = str(summary_candidates[-1].relative_to(ROOT))
 
     steps = [script["total_steps"] for script in progress["scripts"]]
     deviation_counter = Counter(item["reward_requirements"]["deviation_level"] for item in rl["state_action_data"])
     transition_turns = sum(1 for item in rl["state_action_data"] if item["script_info"]["is_transition_script"])
 
-    return {
+    report = {
         "script_total": progress["total_scripts"],
         "source_count": len({item["source"] for item in progress["scripts"]}),
         "target_slot_count": len({item["target_slot"] for item in progress["scripts"]}),
@@ -111,6 +125,16 @@ def inspect_sample_outputs() -> dict:
         "high_deviation_threshold": rl["metadata"]["high_deviation_threshold"],
         "deviation_thresholds": rl["metadata"]["deviation_thresholds"],
     }
+    if runtime_transcript:
+        report["runtime_demo"] = {
+            "turns": runtime_transcript["summary"]["total_turns"],
+            "algorithm": runtime_transcript["summary"]["algorithm"],
+            "average_similarity": runtime_transcript["summary"]["average_similarity"],
+            "transitions_used": runtime_transcript["summary"]["transitions_used"],
+            "next_focus_slots": runtime_transcript["summary"]["next_focus_slots"],
+            "summary_file": runtime_summary,
+        }
+    return report
 
 
 def scan_secrets() -> dict:

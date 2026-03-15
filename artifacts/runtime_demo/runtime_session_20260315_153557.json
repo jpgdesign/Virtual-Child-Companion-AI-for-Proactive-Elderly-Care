@@ -1,0 +1,167 @@
+{
+  "summary": {
+    "algorithm": "dqn",
+    "script_file": "grandma_session_20250713_185829\\奶奶劇本\\奶奶對話劇本_20250713_190426.json",
+    "model_path": "artifacts\\runtime_models\\runtime_dqn_model.pt",
+    "total_turns": 6,
+    "average_similarity": 0.516,
+    "average_deviation": 1.333,
+    "transitions_used": 3,
+    "slot_completion": {
+      "用藥狀況": {
+        "filled_items": [
+          "量血壓情況",
+          "服藥情況",
+          "身體不適"
+        ],
+        "completion_ratio": 0.75
+      },
+      "睡眠狀態": {
+        "filled_items": [
+          "起床時間",
+          "睡眠時間",
+          "小睡情況",
+          "睡眠品質"
+        ],
+        "completion_ratio": 1.0
+      },
+      "作息活動": {
+        "filled_items": [
+          "居家運動",
+          "外出情況",
+          "喝水情況",
+          "看電視情況"
+        ],
+        "completion_ratio": 0.667
+      },
+      "飲食狀況": {
+        "filled_items": [
+          "三餐時間",
+          "食物內容"
+        ],
+        "completion_ratio": 0.5
+      }
+    },
+    "concerns": [],
+    "next_focus_slots": [
+      "用藥狀況",
+      "作息活動",
+      "飲食狀況"
+    ]
+  },
+  "turns": [
+    {
+      "turn": 1,
+      "assistant_message": "奶奶，你今天早上有去練氣功嗎？我記得你說過那對你的身心狀態有很大的幫助。",
+      "elder_message": "哎呀，我今天五點多就起床了，天氣涼涼的很適合去公園練氣功。",
+      "expected_response": "有阿，今天早上天氣真好，我就去公園練了一下氣功。回來後就吃了早餐。",
+      "script_id": 8,
+      "target_slot": "飲食狀況",
+      "similarity": 0.7913545370101929,
+      "deviation_level": 0,
+      "transition_used": false,
+      "extracted_slots": {
+        "睡眠狀態": [
+          "起床時間"
+        ],
+        "作息活動": [
+          "居家運動",
+          "外出情況"
+        ]
+      }
+    },
+    {
+      "turn": 2,
+      "assistant_message": "那聽起來你的一天開始得很棒呀。你早餐都喜歡吃些什麼呢？",
+      "elder_message": "運動完我會餓，所以早餐吃了地瓜粥和一點醬菜，還喝了溫水。",
+      "expected_response": "我通常吃一點燕麥粥和一些水果，有時候會加一點豆漿。",
+      "script_id": 8,
+      "target_slot": "飲食狀況",
+      "similarity": 0.7157787084579468,
+      "deviation_level": 0,
+      "transition_used": false,
+      "extracted_slots": {
+        "作息活動": [
+          "居家運動",
+          "喝水情況"
+        ],
+        "飲食狀況": [
+          "三餐時間",
+          "食物內容"
+        ]
+      }
+    },
+    {
+      "turn": 3,
+      "assistant_message": "哇，你的早餐真健康，我也該學學你。那午餐和晚餐呢，你通常都吃些什麼呢？",
+      "elder_message": "我吃完早餐大概一兩個小時就會吃控制血糖的藥，藥都放在餐桌上比較不會忘記。",
+      "expected_response": "午餐我通常吃點蔬菜和肉，晚餐我會吃得輕一點，像是湯或是炒菜。",
+      "script_id": 8,
+      "target_slot": "飲食狀況",
+      "similarity": 0.37897664308547974,
+      "deviation_level": 2,
+      "transition_used": true,
+      "extracted_slots": {
+        "用藥狀況": [
+          "量血壓情況",
+          "服藥情況"
+        ],
+        "飲食狀況": [
+          "三餐時間"
+        ]
+      }
+    },
+    {
+      "turn": 4,
+      "assistant_message": "奶奶，你最近還在早上去練氣功嗎？我記得你說過那對你的血糖控制很有幫助呢。",
+      "elder_message": "中午有時候會小睡半小時，晚上差不多十點就上床，最近睡得還不錯。",
+      "expected_response": "對呀，我還是堅持每天早上去練習，感覺身體比較有活力，也有助於血糖的控制。",
+      "script_id": 5,
+      "target_slot": "用藥狀況",
+      "similarity": 0.3730524778366089,
+      "deviation_level": 2,
+      "transition_used": true,
+      "extracted_slots": {
+        "睡眠狀態": [
+          "睡眠時間",
+          "小睡情況",
+          "睡眠品質"
+        ]
+      }
+    },
+    {
+      "turn": 5,
+      "assistant_message": "奶奶，你今天早上有去練氣功嗎？我記得你說過那對你的身心狀態有很大的幫助。",
+      "elder_message": "下午我會去散步，回來洗個澡，再看看包青天，這樣心情很好。",
+      "expected_response": "有阿，今天早上天氣真好，我就去公園練了一下氣功。回來後就吃了早餐。",
+      "script_id": 8,
+      "target_slot": "飲食狀況",
+      "similarity": 0.5729724764823914,
+      "deviation_level": 1,
+      "transition_used": false,
+      "extracted_slots": {
+        "作息活動": [
+          "外出情況",
+          "看電視情況"
+        ]
+      }
+    },
+    {
+      "turn": 6,
+      "assistant_message": "那聽起來你的一天開始得很棒呀。你早餐都喜歡吃些什麼呢？",
+      "elder_message": "偶爾也會量一下血壓，覺得身體沒有什麼特別不舒服。",
+      "expected_response": "我通常吃一點燕麥粥和一些水果，有時候會加一點豆漿。",
+      "script_id": 8,
+      "target_slot": "飲食狀況",
+      "similarity": 0.26637959480285645,
+      "deviation_level": 3,
+      "transition_used": true,
+      "extracted_slots": {
+        "用藥狀況": [
+          "量血壓情況",
+          "身體不適"
+        ]
+      }
+    }
+  ]
+}

@@ -14,13 +14,14 @@
     <header class="hero">
       <div class="hero-copy">
         <p class="eyebrow">AI Lightweighting x Elder Dialogue Simulation</p>
-        <h1>把 AI 輕量化概念，落到一個老人對話模擬研究原型上</h1>
+        <h1>讓虛擬兒女對話系統，真的用 RL 做出下一句陪伴與追問</h1>
         <p class="hero-text">
-          這份成果頁整理了 AI 輕量化的核心概念、目前專案的真實結構、已找到的樣本輸出，以及可行性測試結果。
-          目前專案適合展示與規劃，不適合直接宣稱可完整重跑。
+          這份成果頁整理了 AI 輕量化的核心概念、目前專案的真實結構、說明書與簡報對齊情況，以及已經實跑通過的
+          DQN / Q-learning 虛擬兒女 runtime。
         </p>
         <div class="hero-actions">
           <a class="button button-primary" href="../README.md">閱讀 README</a>
+          <a class="button button-secondary" href="../docs/SPEC_ALIGNMENT.md">查看規格對齊</a>
           <a class="button button-secondary" href="../docs/FEASIBILITY_REPORT.md">查看可行性報告</a>
         </div>
       </div>
@@ -36,12 +37,12 @@
           <p class="section-label">什麼是 AI 輕量化</p>
           <h2>不是只把模型縮小，而是把成本、延遲、依賴與維運複雜度一起降下來</h2>
           <p>
-            對這個專案來說，輕量化的價值不只在模型壓縮，還包括腳本預生成、相似度快取、規則優先、缺件補齊與部署拆層。
+            對這個專案來說，輕量化的價值不只在模型壓縮，還包括腳本預生成、相似度快取、規則式槽位抽取，以及把研究流程拆成可實跑 runtime。
           </p>
         </article>
         <article class="section-card accent-card">
           <p class="section-label">專案現況</p>
-          <h2>文件化與成果展示已可成立，完整訓練鏈路尚未完成補件</h2>
+          <h2>核心對話原型已可實跑，剩下的是語音、前端與照護後台產品化</h2>
           <ul class="plain-list" id="status-bullets"></ul>
         </article>
       </section>
@@ -49,16 +50,24 @@
       <section class="section">
         <div class="section-heading">
           <p class="section-label">專案流程</p>
-          <h2>目前可重建的四段式架構</h2>
+          <h2>目前已落地的五段式架構</h2>
         </div>
         <div class="architecture-grid" id="architecture-grid"></div>
+      </section>
+
+      <section class="section">
+        <div class="section-heading">
+          <p class="section-label">規格對齊</p>
+          <h2>說明書與簡報現在已經做到哪裡</h2>
+        </div>
+        <div class="audit-grid" id="spec-grid"></div>
       </section>
 
       <section class="section two-column">
         <article class="section-card">
           <div class="section-heading compact">
             <p class="section-label">樣本輸出</p>
-            <h2>既有 JSON 能證明專案不是空殼</h2>
+            <h2>不只保留歷史樣本，也新增了實跑 runtime 成果</h2>
           </div>
           <div class="metric-stack" id="artifact-metrics"></div>
           <div class="file-list" id="artifact-files"></div>

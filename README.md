@@ -29,19 +29,22 @@ AI 輕量化最常見於下列場景：
 
 ## 3. 這個專案與 AI 輕量化的關聯
 
-這個資料夾中的程式，核心上在做四件事：
+這個資料夾中的程式，現在已經可以拆成「離線生成 / 訓練」與「輕量 runtime」兩段：
 
 1. 以背景資訊、喜好興趣、作息等資料生成奶奶對話腳本
 2. 模擬奶奶回覆，並根據偏離程度與槽位填充情況記錄 RL 資料
 3. 計算 reward，將對話過程轉成 `(state, action, reward, next_state)` 訓練樣本
-4. 交給 DQN 訓練策略模型，嘗試學出更好的對話腳本選擇策略
+4. 交給 DQN 或 Q-learning 訓練策略模型
+5. 用實際的 RL runtime 根據槽位進度與偏離訊號選下一個劇本，並輸出家屬摘要
 
-這種流程很完整，但也很重：
+其中前 1 到 3 步偏重研究與資料建立，第 4 到 5 步則是目前已能實跑的決策與摘要流程。
+
+這也正是 AI 輕量化最適合發揮的地方：
 
 - 依賴 OpenAI API
 - 使用 `SentenceTransformer` 與 `torch`
-- 訓練流程依賴多個未附上的本地模組
-- 需要額外資料檔（`.docx` / `.xlsx`）
+- 有多輪對話決策成本
+- 有摘要與結構化資訊提取需求
 
 因此，這個專案非常適合討論 AI 輕量化，因為它同時具備：
 
@@ -52,7 +55,7 @@ AI 輕量化最常見於下列場景：
 
 ## 4. 專案目前可辨識的架構
 
-依照現有原始碼與輸出檔案，本專案可以重建為以下流程：
+依照目前原始碼、輸出檔與新補上的 runtime，專案架構如下：
 
 ### 4.1 腳本生成
 
@@ -85,7 +88,7 @@ AI 輕量化最常見於下列場景：
   - 對話長度是否過長
   - 平均偏離程度是否過高
 
-### 4.4 DQN 訓練
+### 4.4 RL 訓練
 
 `integrated_dqn_train.py`
 
@@ -101,7 +104,26 @@ py integrated_dqn_train.py --algorithm dqn --input rl_data_20250721_142929.json
 py integrated_dqn_train.py --algorithm q_learning --input rl_data_20250721_142929.json
 ```
 
-## 5. 已找到的實際輸出成果
+### 4.5 實際對話 Runtime
+
+`virtual_child_rl_system.py`
+
+- 載入既有 12 組劇本與 RL 訓練資料
+- 將對話狀態整理成 `4 個槽位進度 + 1 個偏離旗標`
+- 實際讓 DQN / Q-learning 參與「下一個劇本」選擇
+- 用 `SentenceTransformer` 偵測偏離，失敗時自動 fallback 到 token overlap
+- 用規則式槽位抽取蒐集睡眠、飲食、作息、用藥資訊
+- 輸出家屬摘要 Markdown 與完整 transcript JSON
+
+#### Runtime 執行方式
+
+```powershell
+py virtual_child_rl_system.py --mode demo --algorithm dqn
+py virtual_child_rl_system.py --mode demo --algorithm q_learning
+py virtual_child_rl_system.py --mode interactive --algorithm dqn
+```
+
+## 5. 已找到且已驗證的輸出成果
 
 根據資料夾中的 JSON 檔，專案目前至少產出過以下結果：
 
@@ -110,8 +132,9 @@ py integrated_dqn_train.py --algorithm q_learning --input rl_data_20250721_14292
 - 最少 `5` 步，最多 `10` 步
 - 1 份 59 輪的對話模擬樣本
 - 1 份對應的 RL 訓練資料
+- 2 份新的 RL runtime 示範成果（DQN / Q-learning 各 1）
 
-### 5.1 樣本對話統計
+### 5.1 歷史樣本對話統計
 
 - 對話輪數：`59`
 - 平均相似度：`0.5827`
@@ -136,9 +159,36 @@ py integrated_dqn_train.py --algorithm q_learning --input rl_data_20250721_14292
 
 說明：這些數字來自資料夾中既有的 `progress.json`、`pure_dialogue_20250721_142929.json`、`rl_data_20250721_142929.json`，不是假設值。
 
-## 6. 為什麼這個專案值得做 AI 輕量化
+### 5.4 新增的實跑成果
 
-### 6.1 成本面
+已新增並驗證：
+
+- `artifacts/runtime_demo/runtime_session_20260315_153557.json`
+- `artifacts/runtime_demo/caregiver_summary_20260315_153557.md`
+- `artifacts/runtime_demo/runtime_session_20260315_153754.json`
+- `artifacts/runtime_demo/caregiver_summary_20260315_153754.md`
+
+這代表專案現在不只是「有資料可展示」，而是能真的跑出：
+
+- RL 決策過的下一句對話
+- 偏離後的重聚焦
+- 家屬 / 照護端摘要
+
+## 6. 與說明書 / 簡報的對齊程度
+
+我已將 `專案說明/` 內的 `docx` 與 `pptx` 內容抽出並逐項比對，結論是：
+
+- 核心概念已對齊：`虛擬兒女`、`隱性聊天`、`健康槽位`、`偏離偵測`、`RL 選劇本`
+- 實作已對齊：DQN 為主、可切 Q-learning、可輸出家屬摘要
+- 尚未完整產品化：語音介面、正式 Web/手機互動前端、權限/API、照護儀表板
+
+完整對齊表請看：
+
+- `docs/SPEC_ALIGNMENT.md`
+
+## 7. 為什麼這個專案值得做 AI 輕量化
+
+### 7.1 成本面
 
 目前流程對大型模型與 embedding 都有依賴。如果未來要部署成實際服務，成本會來自：
 
@@ -147,56 +197,60 @@ py integrated_dqn_train.py --algorithm q_learning --input rl_data_20250721_14292
 - 相似度編碼模型的推論
 - 訓練與評估流程的額外資源
 
-### 6.2 延遲面
+但現在已經多了一條更輕的路：
+
+- 劇本可預先生成
+- RL runtime 可直接重用既有劇本與訓練資料
+- 槽位抽取已可先用規則式完成 base version
+
+### 7.2 延遲面
 
 如果系統要做成陪伴型、即時型長照對話機器人，高延遲會直接傷害使用體驗。
 
-### 6.3 部署面
+### 7.3 部署面
 
 現況依賴：
 
-- 缺漏本地模組
-- 缺漏部分 Python 套件
-- 缺漏原始資料檔
-- 先前有把 API 金鑰寫死在程式碼中
+- `SentenceTransformer` 與 `torch`
+- 新劇本生成仍需要 `openai` 與 `python-docx`
+- 若要完整重建原始資料流程，仍需要 `data/` 來源檔
 
-這些都代表專案還沒進入「可穩定部署」狀態，需要先做工程瘦身與安全整理。
+但相較前一版，專案已不再是只有分析與文件化，而是能夠執行輕量 runtime。
 
-## 7. 建議的 AI 輕量化路線
+## 8. 建議的 AI 輕量化路線
 
 以下是最適合這個專案的輕量化順序。
 
-### 7.1 第一階段：先把系統變乾淨
+### 8.1 第一階段：先把系統變乾淨
 
 - 移除硬編碼金鑰，改用環境變數
 - 補齊 `README`、測試腳本與可行性報告
-- 補齊遺失的本地模組
 - 補上依賴清單與資料說明
 
 這一階段不是「模型變小」，但它是後續一切輕量化的前提。
 
-### 7.2 第二階段：推論與資料流程輕量化
+### 8.2 第二階段：推論與資料流程輕量化
 
 - 把 LLM 產生的腳本改成「預生成 + 快取」
 - 對相似度模型做批次化、快取或換成更小模型
 - 把規則型判斷優先化，減少每輪都呼叫大模型
 - 將槽位填充抽取改為規則 + 小模型混合式設計
 
-### 7.3 第三階段：模型壓縮
+### 8.3 第三階段：模型壓縮
 
 - Quantization：把可量化模型壓到 8-bit / 4-bit
 - Distillation：把大模型知識蒸餾到小模型
 - PEFT / LoRA：保留能力但降低訓練成本
 - ONNX / TensorRT / llama.cpp：針對推論做部署優化
 
-### 7.4 第四階段：產品化導向
+### 8.4 第四階段：產品化導向
 
 - 將「腳本生成」與「即時對話」拆成離線 / 線上兩段
 - 對陪伴型功能保留高品質模型
 - 對結構化任務（提醒、追問、分類、槽位填寫）改用小模型或規則
 - 對照護現場設備限制，設計雲端版與邊緣版兩種架構
 
-## 8. 可行性測試摘要
+## 9. 可行性測試摘要
 
 我已經補上一個檢查腳本：
 
@@ -208,12 +262,12 @@ py tools/feasibility_check.py
 
 | 項目 | 結果 | 說明 |
 |---|---|---|
-| Python 語法檢查 | 通過 | 4 支主要 Python 檔皆可做語法級檢查 |
+| Python 語法檢查 | 通過 | 5 支主要 Python 檔皆可做語法級檢查 |
 | 必要套件 | 通過 | `numpy`、`torch`、`sentence_transformers`、`pandas` 可被發現 |
 | 可選套件 | 缺少 | `openai`、`python-docx` 未安裝 |
-| 本地模組 | 通過 | 已補上 `dueling_dqn.py` 與 `tabular_q_learning.py` |
-| 參考資料夾 | 空白 | `專案說明/` 目前沒有內容 |
-| 範例輸出 | 存在 | 已找到腳本、對話與 RL 樣本 JSON |
+| 本地模組 | 通過 | 已補上 `dueling_dqn.py`、`tabular_q_learning.py` 與實跑 runtime |
+| 參考資料夾 | 存在 | `專案說明/` 已有 `docx` 與 `pptx` 參考檔 |
+| 範例輸出 | 存在 | 已找到腳本、對話、RL 樣本與 runtime demo |
 | 金鑰外洩 | 已修正 | 已改為從 `OPENAI_API_KEY` 讀取 |
 
 ### 目前結論
@@ -221,17 +275,17 @@ py tools/feasibility_check.py
 本專案屬於「部分可行（partial feasibility）」：
 
 - 文件整理、架構重建、成果展示：可行
-- 用現有 JSON 做分析與網頁展示：可行
-- 直接完整重跑訓練流程：目前不可行
+- DQN / Q-learning runtime 對話示範：可行
+- 家屬摘要輸出：可行
+- 重新生成新劇本與完整雲端流程：仍需補件
 
 主因不是語法壞掉，而是：
 
-- 缺少本地模組
-- 缺少部分第三方套件
-- `專案說明/` 為空
-- 缺少原始 `data/` 與 `outputs/` 目錄
+- 新劇本生成仍依賴 `openai` 與 `python-docx`
+- 原始 `data/` 來源檔仍未補齊
+- Web / 語音產品化介面尚未完成
 
-## 9. GitHub 上傳前檢查清單
+## 10. GitHub 上傳前檢查清單
 
 - [x] 移除硬編碼 OpenAI API key
 - [x] 新增 `.env.example`
@@ -239,36 +293,40 @@ py tools/feasibility_check.py
 - [x] 新增自動化可行性檢查腳本
 - [x] 整理詳細 README
 - [x] 產出可行性報告
+- [x] 補上說明書 / 簡報對齊表
+- [x] 建立可實跑的 RL runtime
 - [x] 製作靜態成果網頁
 - [ ] 建立 GitHub 遠端倉庫
 - [ ] 推送到 GitHub
 
 最後兩步是否能完成，取決於本機是否已具備 GitHub CLI 或可用的 GitHub 驗證資訊。
 
-## 10. 建議的下一步
+## 11. 建議的下一步
 
 如果你要把這個專案繼續往研究或產品化推進，最建議的順序是：
 
-1. 補齊遺失的 4 個本地模組
-2. 補上 `requirements.txt`
-3. 補進 `data/` 與 `outputs/` 的來源說明
-4. 決定哪些步驟保留雲端大模型、哪些步驟換成小模型或規則
+1. 把 `virtual_child_rl_system.py` 接成真正的 Web / 行動端互動頁
+2. 補進語音辨識 / 語音合成
+3. 把家屬摘要升級為 dashboard
+4. 補齊 `data/` 與更多個案資料來源
 5. 再做真正的 AI 輕量化驗證，如量化、蒸餾、推論延遲比較
 
-## 11. 這次新增的成果
+## 12. 這次新增的成果
 
 - `README.md`
 - `docs/FEASIBILITY_REPORT.md`
+- `docs/SPEC_ALIGNMENT.md`
 - `tools/feasibility_check.py`
 - `artifacts/feasibility_report.json`
 - `site/index.html`
 - `site/styles.css`
 - `site/app.js`
 - `.env.example`
+- `virtual_child_rl_system.py`
 
-## 12. 快速啟動
+## 13. 快速啟動
 
-### 12.1 建立與啟用虛擬環境
+### 13.1 建立與啟用虛擬環境
 
 如果還沒建立虛擬環境，可在專案根目錄執行：
 
@@ -288,7 +346,7 @@ py -3.13 -m venv .venv
 pip install -r requirements.txt
 ```
 
-### 12.2 設定 API 金鑰
+### 13.2 設定 API 金鑰（只有生成新劇本時需要）
 
 PowerShell：
 
@@ -296,13 +354,21 @@ PowerShell：
 $env:OPENAI_API_KEY="your_openai_api_key_here"
 ```
 
-### 12.3 執行可行性檢查
+### 13.3 執行可行性檢查
 
 ```powershell
 py tools/feasibility_check.py
 ```
 
-### 12.4 開啟成果網頁
+### 13.4 執行 RL runtime
+
+```powershell
+py virtual_child_rl_system.py --mode demo --algorithm dqn
+py virtual_child_rl_system.py --mode demo --algorithm q_learning
+py virtual_child_rl_system.py --mode interactive --algorithm dqn
+```
+
+### 13.5 開啟成果網頁
 
 直接用瀏覽器打開：
 
@@ -314,4 +380,4 @@ site/index.html
 
 如果把這份 README 濃縮成一句話，這個專案目前最適合被定位成：
 
-> 一個以高齡對話模擬與強化學習為主題的研究型原型，現階段已適合做文件整理、成果展示與輕量化規劃，但還需要補齊依賴與缺漏模組，才能進入完整可重現的訓練階段。
+> 一個以高齡對話模擬與強化學習為主題、已能實跑 DQN / Q-learning 對話 runtime 的研究型原型；目前核心概念已落地，但前端產品化、語音化與完整雲端流程仍待補完。

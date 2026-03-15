@@ -1,0 +1,167 @@
+{
+  "summary": {
+    "algorithm": "q_learning",
+    "script_file": "grandma_session_20250713_185829\\奶奶劇本\\奶奶對話劇本_20250713_190426.json",
+    "model_path": "artifacts\\runtime_models\\runtime_q_learning_model.json",
+    "total_turns": 6,
+    "average_similarity": 0.397,
+    "average_deviation": 2.0,
+    "transitions_used": 5,
+    "slot_completion": {
+      "用藥狀況": {
+        "filled_items": [
+          "量血壓情況",
+          "服藥情況",
+          "身體不適"
+        ],
+        "completion_ratio": 0.75
+      },
+      "睡眠狀態": {
+        "filled_items": [
+          "起床時間",
+          "睡眠時間",
+          "小睡情況",
+          "睡眠品質"
+        ],
+        "completion_ratio": 1.0
+      },
+      "作息活動": {
+        "filled_items": [
+          "居家運動",
+          "外出情況",
+          "喝水情況",
+          "看電視情況"
+        ],
+        "completion_ratio": 0.667
+      },
+      "飲食狀況": {
+        "filled_items": [
+          "三餐時間",
+          "食物內容"
+        ],
+        "completion_ratio": 0.5
+      }
+    },
+    "concerns": [],
+    "next_focus_slots": [
+      "用藥狀況",
+      "作息活動",
+      "飲食狀況"
+    ]
+  },
+  "turns": [
+    {
+      "turn": 1,
+      "assistant_message": "奶奶，聽說你最近很喜歡早上做氣功運動，感覺如何呢？有沒有什麼特別的感受？",
+      "elder_message": "哎呀，我今天五點多就起床了，天氣涼涼的很適合去公園練氣功。",
+      "expected_response": "哎呀，我覺得那氣功運動真的對我有幫助，早上做完感覺一整天都精神。我也會記得去上廁所，不然做運動會不舒服。",
+      "script_id": 11,
+      "target_slot": "作息活動",
+      "similarity": 0.541304886341095,
+      "deviation_level": 1,
+      "transition_used": false,
+      "extracted_slots": {
+        "睡眠狀態": [
+          "起床時間"
+        ],
+        "作息活動": [
+          "居家運動",
+          "外出情況"
+        ]
+      }
+    },
+    {
+      "turn": 2,
+      "assistant_message": "那真是太棒了，奶奶！我看你也有跟鄰居聊天和散步的習慣，你們都會去哪裡散步呢？",
+      "elder_message": "運動完我會餓，所以早餐吃了地瓜粥和一點醬菜，還喝了溫水。",
+      "expected_response": "我們就在社區公園附近走走，有時候也會去附近的市場。回來後我都會去洗個澡，覺得很舒服。",
+      "script_id": 11,
+      "target_slot": "作息活動",
+      "similarity": 0.3261442184448242,
+      "deviation_level": 2,
+      "transition_used": true,
+      "extracted_slots": {
+        "作息活動": [
+          "居家運動",
+          "喝水情況"
+        ],
+        "飲食狀況": [
+          "三餐時間",
+          "食物內容"
+        ]
+      }
+    },
+    {
+      "turn": 3,
+      "assistant_message": "奶奶，您今天還好嗎？我剛剛帶可愛的小狗去公園散步，看見一群阿姨們在練氣功，還蠻想起您的。",
+      "elder_message": "我吃完早餐大概一兩個小時就會吃控制血糖的藥，藥都放在餐桌上比較不會忘記。",
+      "expected_response": "我今天也去公園練了氣功，總是覺得運動完人都會精神點。",
+      "script_id": 1,
+      "target_slot": "用藥狀況",
+      "similarity": 0.21034881472587585,
+      "deviation_level": 3,
+      "transition_used": true,
+      "extracted_slots": {
+        "用藥狀況": [
+          "量血壓情況",
+          "服藥情況"
+        ],
+        "飲食狀況": [
+          "三餐時間"
+        ]
+      }
+    },
+    {
+      "turn": 4,
+      "assistant_message": "奶奶，你最近還在早上去練氣功嗎？我記得你說過那對你的血糖控制很有幫助呢。",
+      "elder_message": "中午有時候會小睡半小時，晚上差不多十點就上床，最近睡得還不錯。",
+      "expected_response": "對呀，我還是堅持每天早上去練習，感覺身體比較有活力，也有助於血糖的控制。",
+      "script_id": 5,
+      "target_slot": "用藥狀況",
+      "similarity": 0.3730524778366089,
+      "deviation_level": 2,
+      "transition_used": true,
+      "extracted_slots": {
+        "睡眠狀態": [
+          "睡眠時間",
+          "小睡情況",
+          "睡眠品質"
+        ]
+      }
+    },
+    {
+      "turn": 5,
+      "assistant_message": "奶奶，您今天還好嗎？我剛剛帶可愛的小狗去公園散步，看見一群阿姨們在練氣功，還蠻想起您的。",
+      "elder_message": "下午我會去散步，回來洗個澡，再看看包青天，這樣心情很好。",
+      "expected_response": "我今天也去公園練了氣功，總是覺得運動完人都會精神點。",
+      "script_id": 1,
+      "target_slot": "用藥狀況",
+      "similarity": 0.4403449594974518,
+      "deviation_level": 2,
+      "transition_used": true,
+      "extracted_slots": {
+        "作息活動": [
+          "外出情況",
+          "看電視情況"
+        ]
+      }
+    },
+    {
+      "turn": 6,
+      "assistant_message": "奶奶，你最近還在早上去練氣功嗎？我記得你說過那對你的血糖控制很有幫助呢。",
+      "elder_message": "偶爾也會量一下血壓，覺得身體沒有什麼特別不舒服。",
+      "expected_response": "對呀，我還是堅持每天早上去練習，感覺身體比較有活力，也有助於血糖的控制。",
+      "script_id": 5,
+      "target_slot": "用藥狀況",
+      "similarity": 0.49211665987968445,
+      "deviation_level": 2,
+      "transition_used": true,
+      "extracted_slots": {
+        "用藥狀況": [
+          "量血壓情況",
+          "身體不適"
+        ]
+      }
+    }
+  ]
+}

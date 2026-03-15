@@ -5,23 +5,20 @@
 
 ## 1. 測試目的
 
-本報告的目標是回答三個問題：
+本報告回答三件事：
 
-1. 這個專案目前是否能被理解與展示
-2. 這個專案目前是否能完整重跑
-3. 若要上傳 GitHub，哪些風險需要先處理
+1. 專案現在是否有照說明書與簡報的核心方向落地
+2. 程式目前是否已經能真正跑出 RL 陪伴對話成果
+3. 哪些部分仍屬於研究原型，而不是完整產品
 
-## 2. 測試方法
+## 2. 這次怎麼檢查
 
-本次使用以下方式檢查：
-
-- 檢查主要 Python 檔案語法
-- 檢查必要與可選套件是否存在
-- 檢查訓練流程依賴的本地模組是否存在
-- 檢查 `專案說明/` 是否有實際內容
-- 檢查既有 JSON 輸出是否可讀
-- 檢查原始碼中是否還殘留 OpenAI 金鑰
-- 檢查 GitHub CLI 是否可用
+- 檢查主要 Python 檔語法
+- 檢查必要 / 可選套件
+- 檢查 `專案說明/` 參考檔是否存在
+- 檢查既有腳本、對話、RL 資料
+- 檢查新補的 `virtual_child_rl_system.py` 是否能實跑
+- 檢查是否仍有硬編碼金鑰
 
 自動化檢查腳本：
 
@@ -29,200 +26,114 @@
 py tools/feasibility_check.py
 ```
 
+實跑驗證指令：
+
+```powershell
+py virtual_child_rl_system.py --mode demo --algorithm dqn
+py virtual_child_rl_system.py --mode demo --algorithm q_learning
+```
+
 ## 3. 總結結論
 
-本專案目前屬於 `partial feasibility`。
+本專案目前最準確的狀態是：
+
+> 已完成可實跑的 RL 陪伴對話原型，但仍未完成產品化前端、語音化與完整雲端後端。
 
 也就是：
 
-- 可做文件補完
-- 可做架構重建
-- 可做成果網頁展示
-- 可做既有輸出資料分析
+- 說明書 / 簡報的核心概念已經落地
+- DQN 與 Q-learning 都能實際參與選劇本
+- 系統能輸出家屬摘要
+- 但還不是最終產品版
 
-但尚未達到：
+## 4. 已完成項目
 
-- 完整重現訓練
-- 一鍵執行全流程
-- 直接部署
+### 4.1 與規格對齊的核心能力
 
-## 4. 詳細結果
+- `虛擬兒女` 陪伴式對話主軸
+- `3 × 4 = 12` 組劇本架構
+- 偏離偵測與高偏離重聚焦
+- 健康槽位蒐集
+- RL 決策選劇本
+- `DQN` 預設、可切 `Q-learning`
+- 家屬 / 照護摘要輸出
 
-### 4.1 語法與程式本體
+### 4.2 可實跑程式
 
-| 檔案 | 結果 |
-|---|---|
-| `dialogue_simulator.py` | 通過 |
-| `integrated_dqn_train.py` | 通過 |
-| `R_data.py` | 通過 |
-| `script_generator.py` | 通過 |
-
-判讀：
-
-- 主要 Python 檔案本身可通過語法級檢查
-- 目前阻礙不在語法，而在依賴與檔案缺漏
-
-### 4.2 套件依賴
-
-#### 已找到
-
-- `numpy`
-- `torch`
-- `sentence_transformers`
-- `pandas`
-
-#### 缺少
-
-- `openai`
-- `docx`  
-  說明：`docx` 對應常見套件為 `python-docx`
-
-判讀：
-
-- 即使語法可過，仍不能保證直接執行
-- 腳本生成與訓練流程至少還缺 3 個套件
-
-### 4.3 本地模組缺漏
-
-目前 RL 訓練核心模組已整理為：
-
-- `dueling_dqn.py`
-- `tabular_q_learning.py`
 - `integrated_dqn_train.py`
+- `virtual_child_rl_system.py`
 
-判讀：
+目前 `virtual_child_rl_system.py` 已可：
 
-- 訓練器已改成預設 DQN、可切換 Q-learning
-- 後續阻塞點改成資料完整性與套件安裝，而不是演算法切換結構
+- 載入既有劇本
+- 載入或訓練 DQN / Q-learning runtime policy
+- 依槽位進度與偏離訊號選下一個劇本
+- 產出 Markdown 摘要與 JSON transcript
 
-### 4.4 參考資料狀態
+### 4.3 已驗證成果
 
-`專案說明/` 目前是空資料夾。
+已產生：
 
-判讀：
+- `artifacts/runtime_demo/runtime_session_20260315_153557.json`
+- `artifacts/runtime_demo/caregiver_summary_20260315_153557.md`
+- `artifacts/runtime_demo/runtime_session_20260315_153754.json`
+- `artifacts/runtime_demo/caregiver_summary_20260315_153754.md`
 
-- 無法從使用者提供的參考內容直接補完專案背景
-- 本次 README 與報告只能依據現有程式碼與輸出 JSON 重建
+這代表程式已不是只有文件或靜態展示，而是真的能跑出一輪對話與摘要。
 
-### 4.5 既有輸出樣本
+## 5. 目前仍未完成項目
 
-已找到並成功解析：
+### 5.1 前端 / 產品化
 
-- `grandma_session_20250713_185829/progress.json`
-- `pure_dialogue_20250721_142929.json`
-- `rl_data_20250721_142929.json`
+- 長者實際使用的 Web / 行動端互動頁
+- 大字體 / 大按鈕 / 一鍵對話 UI
+- 家屬 dashboard
 
-從樣本推得：
+### 5.2 語音能力
 
-- 腳本數量：12
-- 來源類型：3
-- 目標槽位：4
-- 平均每腳本步數：6.33
-- 範例對話輪數：59
-- 平均相似度：0.5827
-- 平均偏離程度：1.2034
-- 轉場腳本使用次數：10
+- 語音辨識（STT）
+- 語音合成（TTS）
 
-判讀：
+### 5.3 後端服務
 
-- 專案不是空殼
-- 先前確實有跑過腳本生成與模擬流程
-- 足夠支撐 README 與展示頁面
+- 正式 API
+- 權限控管
+- 系統日誌
+- 多使用者資料管理
 
-### 4.6 安全性
+### 5.4 離線資料補件
 
-原始碼中原本存在硬編碼的 OpenAI API key。
+- 若要重新生成新劇本，仍需要 `openai`
+- 若要直接讀取原始說明資料，仍需要 `python-docx`
+- 若要完整重建最初流程，仍需要補齊 `data/` 來源檔
 
-本次已處理：
+## 6. 檢查結果摘要
 
-- `script_generator.py` 改為讀取 `OPENAI_API_KEY`
-- `dialogue_simulator.py` 改為讀取 `OPENAI_API_KEY`
-- 新增 `.env.example`
+| 項目 | 狀態 | 判讀 |
+|---|---|---|
+| Python 語法 | 通過 | 主要檔案可編譯 |
+| 必要套件 | 通過 | `numpy`、`torch`、`sentence_transformers`、`pandas` 可用 |
+| 可選套件 | 部分缺少 | `openai`、`python-docx` 仍視需求安裝 |
+| 參考資料 | 存在 | `專案說明/` 已有 `docx` 與 `pptx` |
+| 舊樣本輸出 | 存在 | 已找到腳本、對話、RL 資料 |
+| 新 runtime 示範 | 通過 | DQN / Q-learning 皆已實跑 |
+| 金鑰安全 | 通過 | 已改為 `OPENAI_API_KEY` |
 
-最新檢查結果：
+## 7. 最終判定
 
-- `secrets_found = 0`
+本專案目前屬於 `partial feasibility`，但它的「partial」已經不是先前那種只有文件可補的狀態，而是：
 
-判讀：
+- 核心研究流程可理解
+- RL runtime 可執行
+- 成果可展示
+- 摘要可輸出
 
-- 已不適合再把金鑰直接放進程式碼
-- 現在的版本已比較適合推上 GitHub
+真正尚未完成的是產品化外層，而不是核心概念本身。
 
-### 4.7 GitHub 上傳能力
+## 8. 下一步建議
 
-本機現況：
-
-- `git` 可用
-- `gh`（GitHub CLI）不存在
-
-判讀：
-
-- 可以先做本地 git 初始化與 commit
-- 但若沒有 GitHub CLI、token、或既有遠端 URL，無法直接自動建立 GitHub 倉庫並推送
-
-## 5. 風險分級
-
-### 高風險
-
-- 缺少 4 個本地模組，導致訓練流程中斷
-- 缺少 `openai` / `jsonlines` / `python-docx`
-- `專案說明/` 無內容
-
-### 中風險
-
-- `data/` 與 `outputs/` 來源不完整
-- 路徑與樣本輸出之間存在歷史殘留，重現性不足
-
-### 已處理風險
-
-- 硬編碼 API key
-
-## 6. 可做與不可做
-
-### 目前可做
-
-- 閱讀與理解現有架構
-- 基於既有 JSON 做結果分析
-- 產出 README、報告、網頁
-- 做下一階段 AI 輕量化規劃
-- 做本地 git 初始化
-
-### 目前不可做
-
-- 無補件情況下重跑 DQN 訓練全流程
-- 無補件情況下重跑完整資料前處理與視覺化
-- 直接自動上傳到新的 GitHub 倉庫
-
-## 7. 建議修復順序
-
-1. 補齊 `dueling_dqn.py`
-2. 補齊 `data_preprocessor.py`
-3. 補齊 `visualize_matrices.py`
-4. 補齊 `f1_evaluator.py`
-5. 安裝 `openai`、`jsonlines`、`python-docx`
-6. 補進 `專案說明/` 與原始 `data/`
-7. 補 `requirements.txt`
-8. 再進行真正的輕量化與效能比較
-
-## 8. 本次新增成果
-
-- 詳盡 `README.md`
-- `tools/feasibility_check.py`
-- `artifacts/feasibility_report.json`
-- 靜態成果頁 `site/index.html`
-
-## 9. 最終判定
-
-這個專案目前最合理的判定是：
-
-> 可展示、可分析、可整理，但尚未達成完整可重現。
-
-換句話說，現在非常適合：
-
-- 先上 GitHub 做研究展示
-- 補齊缺件後再往可訓練、可部署版本推進
-
-而不是直接宣稱：
-
-- 已完成可執行產品
-- 已具備一鍵訓練能力
+1. 把 `virtual_child_rl_system.py` 接成互動式 Web 頁
+2. 補上 STT / TTS
+3. 把家屬摘要升級成 dashboard
+4. 增加更多個案資料與長期測試
+5. 再進行真正的 AI 輕量化比較，例如量化、蒸餾、延遲實測

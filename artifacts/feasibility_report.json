@@ -12,6 +12,9 @@
     },
     "script_generator.py": {
       "status": "pass"
+    },
+    "virtual_child_rl_system.py": {
+      "status": "pass"
     }
   },
   "required_packages": {
@@ -47,7 +50,7 @@
   "reference_status": {
     "path": "C:\\Users\\15507\\Desktop\\老人\\專案說明",
     "exists": true,
-    "file_count": 0
+    "file_count": 2
   },
   "sample_files": {
     "session_dir_exists": true,
@@ -57,7 +60,13 @@
       "grandma_session_20250713_185829\\grandma_session_summary_20250713_190426.json"
     ],
     "dialogue_json_exists": true,
-    "rl_json_exists": true
+    "rl_json_exists": true,
+    "runtime_demo_files": [
+      "artifacts\\runtime_demo\\caregiver_summary_20260315_153557.md",
+      "artifacts\\runtime_demo\\caregiver_summary_20260315_153754.md",
+      "artifacts\\runtime_demo\\runtime_session_20260315_153557.json",
+      "artifacts\\runtime_demo\\runtime_session_20260315_153754.json"
+    ]
   },
   "sample_outputs": {
     "script_total": 12,
@@ -90,6 +99,18 @@
       "1": 0.5,
       "2": 0.3,
       "3": 0.0
+    },
+    "runtime_demo": {
+      "turns": 6,
+      "algorithm": "q_learning",
+      "average_similarity": 0.397,
+      "transitions_used": 5,
+      "next_focus_slots": [
+        "用藥狀況",
+        "作息活動",
+        "飲食狀況"
+      ],
+      "summary_file": "artifacts\\runtime_demo\\caregiver_summary_20260315_153754.md"
     }
   },
   "secret_scan": {
@@ -105,7 +126,7 @@
       "docx"
     ],
     "local_missing": [],
-    "reference_dir_empty": true,
+    "reference_dir_empty": false,
     "secrets_found": 0
   }
 }

@@ -1,0 +1,8 @@
+{
+  "algorithm": "dqn",
+  "training_file": "rl_data_20250721_142929.json",
+  "epochs": 180,
+  "batch_size": 16,
+  "records": 59,
+  "average_reward": -0.42951681703569333
+}
