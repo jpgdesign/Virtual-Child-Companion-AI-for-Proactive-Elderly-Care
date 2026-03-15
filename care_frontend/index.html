@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>虛擬兒女互動照護前端</title>
+  <title>虛擬子女照護陪伴系統</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Shippori+Mincho+B1:wght@600;700;800&display=swap" rel="stylesheet">
@@ -12,30 +12,46 @@
 <body>
   <div class="app-shell">
     <header class="hero">
-      <div>
+      <div class="hero-copy">
         <p class="eyebrow">Interactive Care Frontend</p>
-        <h1>虛擬兒女陪伴站</h1>
+        <h1>虛擬子女照護陪伴系統</h1>
         <p class="hero-text">
-          正式前端已接上 DQN / Q-learning runtime，並支援瀏覽器語音輸入與語音朗讀。
+          以 DQN / Q-learning 驅動長者陪伴對話，整合槽位收集、偏離偵測、重聚焦提示與家屬摘要，
+          讓 CLI runtime 變成可以直接操作的照護前端。
         </p>
       </div>
-      <div class="hero-meta">
-        <div class="meta-pill">正式互動前端</div>
-        <div class="meta-pill">STT / TTS 已接上</div>
-        <div class="meta-pill">家屬 Dashboard</div>
+
+      <div class="hero-highlights">
+        <article class="highlight-card">
+          <span class="highlight-kicker">RL 核心</span>
+          <strong>DQN / Q-learning</strong>
+          <p>同一套前端可直接切換策略模式，方便比較對話流程表現。</p>
+        </article>
+        <article class="highlight-card">
+          <span class="highlight-kicker">語音互動</span>
+          <strong>瀏覽器 STT / TTS</strong>
+          <p>支援語音輸入與語音播報，沒有麥克風也能退回純文字模式。</p>
+        </article>
+        <article class="highlight-card">
+          <span class="highlight-kicker">照護摘要</span>
+          <strong>即時 dashboard</strong>
+          <p>右側同步顯示槽位進度、照護提醒與可交付給家屬的摘要內容。</p>
+        </article>
       </div>
     </header>
 
     <main class="layout">
-      <section class="chat-panel">
+      <section class="chat-panel" aria-label="互動對話區">
         <div class="panel-head">
           <div>
-            <p class="section-label">對話控制</p>
-            <h2>長者互動區</h2>
+            <p class="section-label">Conversation Runtime</p>
+            <h2>陪伴對話工作區</h2>
+            <p class="panel-text">左側專注在互動與收斂節奏，右側持續追蹤照護進度與風險提示。</p>
           </div>
+
           <div class="control-cluster">
-            <label class="field">
-              <span>演算法</span>
+            <label class="field" for="algorithm-select">
+              <span>策略模式</span>
               <select id="algorithm-select">
                 <option value="dqn">DQN</option>
                 <option value="q_learning">Q-learning</option>
@@ -45,32 +61,45 @@
           </div>
         </div>
 
+        <div id="status-band" class="status-band" aria-live="polite"></div>
+
         <div id="chat-thread" class="chat-thread" aria-live="polite"></div>
 
-        <div class="composer">
+        <form id="composer-form" class="composer">
           <div class="composer-tools">
-            <button id="listen-button" class="tool-button" type="button">語音輸入</button>
-            <button id="speak-toggle" class="tool-button is-active" type="button">語音朗讀開</button>
-            <span id="voice-status" class="voice-status">瀏覽器語音待命</span>
+            <div class="tool-group">
+              <button id="listen-button" class="tool-button" type="button" aria-label="開始或停止語音輸入">語音輸入</button>
+              <button id="speak-toggle" class="tool-button is-active" type="button">語音播報已開</button>
+            </div>
+            <span id="voice-status" class="voice-status">語音功能就緒</span>
           </div>
-          <label class="composer-field">
-            <span class="visually-hidden">長者輸入</span>
-            <textarea id="message-input" rows="3" placeholder="請輸入長者回覆，例如：我今天五點就起床去公園練氣功了"></textarea>
+
+          <label class="composer-field" for="message-input">
+            <span>輸入長者回覆</span>
+            <textarea
+              id="message-input"
+              rows="4"
+              placeholder="例如：我今天早餐吃稀飯，剛剛量血壓覺得有點頭暈。"
+            ></textarea>
           </label>
-          <button id="send-button" class="send-button" type="button">送出訊息</button>
-        </div>
+
+          <div class="composer-actions">
+            <p class="composer-note">按 Enter 送出，Shift + Enter 換行</p>
+            <button id="send-button" class="send-button" type="submit">送出訊息</button>
+          </div>
+        </form>
       </section>
 
-      <aside class="dashboard">
+      <aside class="dashboard" aria-label="照護儀表板">
         <section class="dashboard-card">
-          <p class="section-label">Session</p>
-          <h2>即時摘要</h2>
+          <p class="section-label">Session Snapshot</p>
+          <h2>互動摘要</h2>
           <div id="summary-cards" class="summary-grid"></div>
         </section>
 
         <section class="dashboard-card">
           <p class="section-label">Slot Progress</p>
-          <h2>健康槽位進度</h2>
+          <h2>四大槽位進度</h2>
           <div id="slot-progress" class="slot-stack"></div>
         </section>
 
@@ -78,13 +107,13 @@
           <p class="section-label">Care Alerts</p>
           <h2>照護提醒</h2>
           <div id="concern-list" class="chip-list"></div>
-          <h3 class="subheading">下一步關注</h3>
+          <h3 class="subheading">下一步建議焦點</h3>
           <div id="focus-list" class="chip-list"></div>
         </section>
 
         <section class="dashboard-card">
-          <p class="section-label">Caregiver View</p>
-          <h2>摘要文字版</h2>
+          <p class="section-label">Caregiver Summary</p>
+          <h2>家屬摘要</h2>
           <pre id="summary-markdown" class="summary-markdown"></pre>
         </section>
       </aside>
