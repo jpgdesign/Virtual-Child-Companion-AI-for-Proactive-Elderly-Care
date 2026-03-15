@@ -339,7 +339,10 @@ class HybridLLMOrchestrator:
             "You are a care-dialogue copilot for a virtual child talking to an older adult. "
             "Return exactly one JSON object and nothing else. "
             "No markdown. No think tags. "
+            "All natural-language fields must be in Traditional Chinese. "
             "The reply must be in Traditional Chinese and 1 to 3 sentences. "
+            "The reply must briefly acknowledge the elder's latest topic before gently steering back to current_target_slot. "
+            "Do not switch topics abruptly. "
             "Follow current_target_slot strictly. "
             "Use pending_items to guide the next follow-up naturally."
         )
@@ -413,7 +416,8 @@ class HybridLLMOrchestrator:
     ) -> LLMAnalysisResult:
         system_prompt = (
             "You analyze an older adult's reply for a care dialogue system. "
-            "Return exactly one JSON object. No markdown. No think tags."
+            "Return exactly one JSON object. No markdown. No think tags. "
+            "All natural-language fields must be in Traditional Chinese."
         )
         user_payload = {
             "task": "analyze_elder_reply",
@@ -463,6 +467,7 @@ class HybridLLMOrchestrator:
         elder_message: str,
         selected_script: Dict[str, Any],
         reference_reply: str,
+        fast_reply_hint: str,
         current_target_slot: str,
         target_slot_items: Sequence[str],
         pending_items: Sequence[str],
@@ -477,6 +482,9 @@ class HybridLLMOrchestrator:
             "You are a warm virtual child speaking Traditional Chinese. "
             "Write a short natural reply in 1 to 3 sentences. "
             "No markdown. No think tags. "
+            "First briefly acknowledge or paraphrase the older adult's latest topic. "
+            "Then gently steer toward current_target_slot with a hidden bridge. "
+            "Do not abruptly change topics or ignore the elder's message. "
             "Follow current_target_slot strictly and use pending_items."
         )
         user_payload = {
@@ -488,6 +496,7 @@ class HybridLLMOrchestrator:
                 "target_slot": selected_script.get("target_slot"),
             },
             "reference_reply": reference_reply,
+            "fast_reply_hint": fast_reply_hint,
             "current_target_slot": current_target_slot,
             "target_slot_items": list(target_slot_items),
             "pending_items": list(pending_items),

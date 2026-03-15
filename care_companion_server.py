@@ -112,8 +112,17 @@ class CareCompanionHandler(BaseHTTPRequestHandler):
                 return
 
             system = SESSIONS[session_id]
-            result = system.respond(message)
+            result = system.respond_fast(message)
             self._send_json(serialize_session(session_id, system, result["assistant_message"]))
+            return
+
+        if parsed.path == "/api/session_state":
+            session_id = payload.get("session_id")
+            if not session_id or session_id not in SESSIONS:
+                self._send_json({"error": "Session not found. Please reset the conversation."}, status=HTTPStatus.NOT_FOUND)
+                return
+            system = SESSIONS[session_id]
+            self._send_json(serialize_session(session_id, system, None))
             return
 
         self._send_json({"error": "Unknown endpoint."}, status=HTTPStatus.NOT_FOUND)

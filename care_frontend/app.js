@@ -17,10 +17,11 @@ const state = {
   generationPreset: "qwen35_lmstudio",
   availablePresets: { ...fallbackPresets },
   speechEnabled: true,
-  speechRecognitionSupported: true,
   recognition: null,
   listening: false,
   lastPayload: null,
+  pollTimer: null,
+  backgroundPolling: false,
 };
 
 const elements = {
@@ -56,7 +57,6 @@ async function requestJson(url, payload = {}) {
 
   const rawText = await response.text();
   let data = {};
-
   try {
     data = rawText ? JSON.parse(rawText) : {};
   } catch {
@@ -102,7 +102,6 @@ function speak(text) {
   if (!state.speechEnabled || !("speechSynthesis" in window) || !text) {
     return;
   }
-
   window.speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = "zh-TW";
@@ -119,7 +118,7 @@ function renderEmptyState() {
   elements.chatThread.innerHTML = `
     <div class="empty-state">
       <strong>正在建立新的陪伴對話 session</strong>
-      <p>系統會先選擇一個目標槽位，再由 RL 與 LLM 一起決定接下來的問法。</p>
+      <p>系統會先用 RL 決定目標槽位，再快速回覆，背景補上 LLM 分析與自然化調整。</p>
     </div>
   `;
 }
@@ -164,13 +163,13 @@ function renderChat(payload) {
     turns.forEach((turn) => {
       const assistantTags = [`劇本 ${turn.script_id}`, `目標 ${turn.target_slot}`];
       if (turn.generated_by_llm) {
-        assistantTags.push("LLM 生成");
+        assistantTags.push("LLM 輔助");
       }
       elements.chatThread.appendChild(createBubble("assistant", turn.assistant_message, assistantTags));
 
       const tags = [`偏離等級 ${turn.deviation_level}`];
       if (turn.transition_used) {
-        tags.push("已觸發轉場");
+        tags.push("已轉場");
       }
       if (turn.emotion_label) {
         tags.push(`情緒 ${turn.emotion_label}`);
@@ -179,7 +178,11 @@ function renderChat(payload) {
     });
 
     if (latestPrompt) {
-      elements.chatThread.appendChild(createBubble("assistant", latestPrompt, ["下一個提示", currentTarget]));
+      const latestTags = ["快速回覆", currentTarget];
+      if (payload?.background_processing) {
+        latestTags.push("背景優化中");
+      }
+      elements.chatThread.appendChild(createBubble("assistant", latestPrompt, latestTags));
     }
   }
 
@@ -193,15 +196,11 @@ function renderStatusBand(payload) {
     ? summary.next_focus_slots[0]
     : "等待對話資料";
 
-  const llmDetail = llmStatus.enabled
-    ? `${getPresetLabel(state.analysisPreset)} -> ${getPresetLabel(state.generationPreset)}`
-    : "已停用，改用純 RL + 規則";
-
   const cards = [
     {
       label: "策略模式",
       value: toAlgorithmLabel(payload?.algorithm || state.algorithm),
-      detail: "DQN 負責選擇下一份劇本",
+      detail: "由 RL 決定下一份劇本",
       emphasis: false,
     },
     {
@@ -211,21 +210,24 @@ function renderStatusBand(payload) {
       emphasis: true,
     },
     {
-      label: "LLM 模式",
-      value: llmStatus.enabled ? "分析 + 生成" : "已關閉",
-      detail: llmDetail,
+      label: "回覆模式",
+      value: payload?.background_processing ? "極速模式" : "分析完成",
+      detail: payload?.background_processing
+        ? "先秒回，背景補上分析與自然化"
+        : "目前顯示的是最新整理後版本",
       emphasis: false,
     },
     {
-      label: "語音狀態",
-      value: getVoiceModeLabel(),
-      detail: elements.voiceStatus.textContent || "語音功能就緒",
+      label: "模型路徑",
+      value: llmStatus.enabled ? "RL + LLM" : "純規則",
+      detail: llmStatus.enabled
+        ? `${getPresetLabel(state.analysisPreset)} / ${getPresetLabel(state.generationPreset)}`
+        : "目前未啟用 LLM",
       emphasis: false,
     },
   ];
 
   elements.statusBand.innerHTML = "";
-
   cards.forEach((item) => {
     const card = document.createElement("article");
     card.className = `status-card${item.emphasis ? " is-emphasis" : ""}`;
@@ -242,16 +244,16 @@ function renderLLMOverview(summary, payload) {
   const llmStatus = summary.llm_status || payload?.llm_status || {};
   const analysis = payload?.latest_analysis || {};
   const emotion = summary.latest_emotion || analysis.emotion || {};
-
-  elements.llmOverview.innerHTML = "";
+  const statusLabel = analysis.status || (payload?.background_processing ? "pending" : "idle");
 
   const entries = [
-    { label: "LLM 狀態", value: llmStatus.enabled ? "啟用中" : "已停用" },
+    { label: "分析狀態", value: statusLabel },
     { label: "分析模型", value: llmStatus.analysis?.model || getPresetLabel(state.analysisPreset) },
     { label: "生成模型", value: llmStatus.generation?.model || getPresetLabel(state.generationPreset) },
-    { label: "最新情緒", value: emotion.label || "尚無分析" },
+    { label: "最新情緒", value: emotion.label || "尚未分析" },
   ];
 
+  elements.llmOverview.innerHTML = "";
   entries.forEach((item) => {
     const chip = document.createElement("span");
     chip.className = "chip is-muted";
@@ -265,7 +267,7 @@ function renderEmotionPanel(summary, payload) {
   const emotion = summary.latest_emotion || analysis.emotion || {};
   const concerns = Array.isArray(analysis.concerns) ? analysis.concerns : [];
 
-  const pills = [
+  const items = [
     { label: "情緒", value: emotion.label || "未分析" },
     { label: "強度", value: formatMetric(emotion.intensity) },
     { label: "偏離", value: String(analysis.deviation_level ?? summary.average_deviation ?? 0) },
@@ -273,18 +275,18 @@ function renderEmotionPanel(summary, payload) {
   ];
 
   elements.emotionPanel.innerHTML = "";
-  pills.forEach((item) => {
-    const pill = document.createElement("article");
-    pill.className = "status-card";
-    pill.innerHTML = `
+  items.forEach((item) => {
+    const block = document.createElement("article");
+    block.className = "status-card";
+    block.innerHTML = `
       <span class="status-label">${item.label}</span>
       <span class="status-value">${item.value}</span>
     `;
-    elements.emotionPanel.appendChild(pill);
+    elements.emotionPanel.appendChild(block);
   });
 
-  const summaryText = analysis.summary || summary.latest_analysis_summary || "這一輪尚無 LLM 分析摘要。";
-  elements.analysisSummary.textContent = summaryText;
+  elements.analysisSummary.textContent =
+    analysis.summary || summary.latest_analysis_summary || "背景分析尚未完成。";
 }
 
 function renderSummary(summary, payload) {
@@ -312,17 +314,16 @@ function renderSummary(summary, payload) {
   elements.slotProgress.innerHTML = "";
   const slotCompletion = safeSummary.slot_completion || {};
   Object.entries(slotCompletion).forEach(([slotName, info]) => {
-    const card = document.createElement("article");
-    card.className = "slot-card";
     const filledItems = Array.isArray(info.filled_items) && info.filled_items.length
       ? info.filled_items.join("、")
       : "尚未收集到具體項目";
-
     const valueNotes = Object.entries(info.value_notes || {})
       .map(([item, values]) => `${item}：${Array.isArray(values) ? values.join(" / ") : ""}`)
       .filter(Boolean)
       .join("；");
 
+    const card = document.createElement("article");
+    card.className = "slot-card";
     card.innerHTML = `
       <div class="slot-head">
         <span>${slotName}</span>
@@ -356,7 +357,6 @@ function renderSummary(summary, payload) {
 function renderChipList(root, items, extraClass, fallbackText) {
   root.innerHTML = "";
   const list = Array.isArray(items) && items.length ? items : [fallbackText];
-
   list.forEach((item) => {
     const chip = document.createElement("span");
     chip.className = `chip ${extraClass}`;
@@ -386,7 +386,6 @@ function populatePresetOptions() {
   const optionsHtml = Object.keys(presets)
     .map((key) => `<option value="${key}">${getPresetLabel(key)}</option>`)
     .join("");
-
   elements.analysisPresetSelect.innerHTML = optionsHtml;
   elements.generationPresetSelect.innerHTML = optionsHtml;
   elements.analysisPresetSelect.value = state.analysisPreset;
@@ -401,6 +400,40 @@ function buildSessionConfig() {
     analysis_preset: state.analysisPreset,
     generation_preset: state.generationPreset,
   };
+}
+
+function stopBackgroundPolling() {
+  if (state.pollTimer) {
+    window.clearTimeout(state.pollTimer);
+    state.pollTimer = null;
+  }
+  state.backgroundPolling = false;
+}
+
+function scheduleBackgroundPolling() {
+  stopBackgroundPolling();
+  if (!state.sessionId) {
+    return;
+  }
+  state.backgroundPolling = true;
+  state.pollTimer = window.setTimeout(async () => {
+    try {
+      const payload = await requestJson("/api/session_state", { session_id: state.sessionId });
+      const wasProcessing = Boolean(state.lastPayload?.background_processing);
+      applyPayload(payload);
+      if (payload.background_processing) {
+        scheduleBackgroundPolling();
+      } else {
+        stopBackgroundPolling();
+        if (wasProcessing) {
+          setVoiceStatus("背景分析已完成，摘要已更新");
+        }
+      }
+    } catch (error) {
+      stopBackgroundPolling();
+      setVoiceStatus(`背景更新失敗：${error.message}`);
+    }
+  }, 1500);
 }
 
 function applyPayload(payload) {
@@ -418,6 +451,7 @@ function setSendingState(isSending) {
 }
 
 async function createSession() {
+  stopBackgroundPolling();
   renderEmptyState();
   const payload = await requestJson("/api/session", buildSessionConfig());
   applyPayload(payload);
@@ -438,8 +472,17 @@ async function sendMessage() {
     });
     elements.messageInput.value = "";
     applyPayload(payload);
-    setVoiceStatus("已更新回應、填槽與分析摘要");
+    setVoiceStatus(
+      payload.background_processing
+        ? "已快速回覆，背景正在補情緒分析與自然化版本"
+        : "已更新回應與摘要"
+    );
     speak(payload.latest_assistant_message);
+    if (payload.background_processing) {
+      scheduleBackgroundPolling();
+    } else {
+      stopBackgroundPolling();
+    }
   } catch (error) {
     setVoiceStatus(`送出失敗：${error.message}`);
   } finally {
@@ -448,6 +491,7 @@ async function sendMessage() {
 }
 
 async function resetSession() {
+  stopBackgroundPolling();
   renderEmptyState();
   const payload = await requestJson("/api/reset", buildSessionConfig());
   applyPayload(payload);
@@ -457,9 +501,7 @@ async function resetSession() {
 
 function initSpeechRecognition() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
   if (!SpeechRecognition) {
-    state.speechRecognitionSupported = false;
     elements.listenButton.disabled = true;
     setVoiceStatus("此瀏覽器不支援語音輸入，請改用文字輸入");
     return;
@@ -500,11 +542,9 @@ function toggleSpeechOutput() {
   state.speechEnabled = !state.speechEnabled;
   elements.speakToggle.textContent = state.speechEnabled ? "語音播報已開" : "語音播報已關";
   elements.speakToggle.classList.toggle("is-active", state.speechEnabled);
-
   if (!state.speechEnabled && "speechSynthesis" in window) {
     window.speechSynthesis.cancel();
   }
-
   setVoiceStatus(state.speechEnabled ? "語音播報已開啟" : "語音播報已關閉");
 }
 
@@ -512,7 +552,6 @@ function handleListen() {
   if (!state.recognition) {
     return;
   }
-
   if (state.listening) {
     state.recognition.stop();
   } else {

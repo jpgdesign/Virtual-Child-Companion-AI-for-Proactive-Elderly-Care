@@ -5,6 +5,7 @@ import json
 import logging
 import random
 import re
+import threading
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
@@ -55,6 +56,43 @@ SLOT_DEFINITIONS = {
     "作息活動": ["上廁所情況", "居家運動", "外出情況", "洗澡情況", "喝水情況", "看電視情況"],
     "飲食狀況": ["三餐時間", "食物內容", "廚房使用", "冰箱使用"],
 }
+
+FAST_PENDING_QUESTIONS = {
+    "用藥狀況": {
+        "量血壓情況": "對了，您今天有量血壓嗎？大概是多少呢？",
+        "服藥情況": "今天的藥都有按時吃嗎？",
+        "身體不適": "除了剛剛提到的，現在身體還有哪裡不舒服嗎？",
+        "用藥時間": "那您今天大概是幾點吃藥的呢？",
+    },
+    "睡眠狀態": {
+        "起床時間": "您今天大概幾點起床呢？",
+        "睡眠時間": "昨晚大概睡了多久呢？",
+        "小睡情況": "白天有沒有再小睡一下？",
+        "睡眠品質": "昨晚整體睡得還安穩嗎？",
+    },
+    "作息活動": {
+        "上廁所情況": "今天上廁所都還順嗎？",
+        "居家運動": "今天有沒有在家活動一下，像伸展或簡單運動？",
+        "外出情況": "今天有沒有出門走走呢？",
+        "洗澡情況": "今天有沒有洗澡或簡單梳洗？",
+        "喝水情況": "今天水有喝得夠嗎？",
+        "看電視情況": "今天有沒有看喜歡的節目？",
+    },
+    "飲食狀況": {
+        "三餐時間": "今天這餐大概是幾點吃的呢？",
+        "食物內容": "除了剛剛說的，這餐還有搭配什麼嗎？",
+        "廚房使用": "今天有自己進廚房準備東西嗎？",
+        "冰箱使用": "今天有自己去冰箱拿東西嗎？",
+    },
+}
+
+FAST_TOPIC_ACKS = [
+    (re.compile(r"暈|頭暈|不舒服|難受|痛|沒力", re.I), "聽起來您剛剛有點不太舒服，我有在留意。"),
+    (re.compile(r"血壓|量血壓", re.I), "有記得量血壓這點很好，我也比較放心。"),
+    (re.compile(r"吃|早餐|午餐|晚餐|稀飯|麵|飯|菜|喝", re.I), "有把東西吃一點、喝一點都很重要。"),
+    (re.compile(r"睡|起床|午睡|失眠", re.I), "有休息到真的很重要，我想先陪您慢慢聊。"),
+    (re.compile(r"公園|散步|走走|氣功|運動|出門", re.I), "有活動一下或出門走走，聽起來還不錯。"),
+]
 
 SLOT_PATTERNS = {
     "用藥狀況": {
@@ -172,6 +210,10 @@ class RuntimeSession:
     latest_analysis: Dict[str, Any] = field(default_factory=dict)
     llm_enabled: bool = False
     llm_status: Dict[str, Any] = field(default_factory=dict)
+    latest_assistant_message: str = ""
+    analysis_token: int = 0
+    background_processing: bool = False
+    lock: threading.RLock = field(default_factory=threading.RLock, repr=False)
 
     def add_slot_values(self, slot_name: str, values: Iterable[str]) -> None:
         if slot_name not in self.filled_slots:
@@ -482,6 +524,7 @@ class VirtualChildRLSystem:
         self.session.current_step_index = 0
         self.session.started = True
         logger.info("Started session with script_id=%s target_slot=%s", next_script["script_id"], next_script["target_slot"])
+        self.session.latest_assistant_message = self.current_step["child_dialogue"]
         return self.current_step["child_dialogue"]
 
     @property
@@ -521,6 +564,73 @@ class VirtualChildRLSystem:
                 }
             )
         return enriched
+
+    def _pick_pending_item(self, slot_name: str) -> str:
+        for item in SLOT_DEFINITIONS[slot_name]:
+            if item not in self.session.filled_slots.get(slot_name, []):
+                return item
+        return SLOT_DEFINITIONS[slot_name][0]
+
+    def _build_fast_acknowledgement(self, elder_message: str) -> str:
+        for pattern, acknowledgement in FAST_TOPIC_ACKS:
+            if pattern.search(elder_message):
+                return acknowledgement
+        return "我有在聽，您慢慢說就好。"
+
+    def _match_fast_acknowledgement(self, elder_message: str) -> tuple[re.Pattern[str] | None, str]:
+        for pattern, acknowledgement in FAST_TOPIC_ACKS:
+            if pattern.search(elder_message):
+                return pattern, acknowledgement
+        return None, "我有在聽，您慢慢說就好。"
+
+    def _build_fast_guidance(self, target_slot: str) -> str:
+        pending_item = self._pick_pending_item(target_slot)
+        question = FAST_PENDING_QUESTIONS.get(target_slot, {}).get(pending_item)
+        if question:
+            return question
+        return f"我也想多了解一下您今天的{target_slot}，可以再和我說一點嗎？"
+
+    def _extract_reference_question(self, reference_reply: str) -> str:
+        sentences = [
+            sentence.strip()
+            for sentence in re.split(r"(?<=[。！？!?])", reference_reply or "")
+            if sentence.strip()
+        ]
+        for sentence in reversed(sentences):
+            if "？" in sentence or "嗎" in sentence:
+                return sentence
+        return ""
+
+    def _blend_generated_reply(self, elder_message: str, fast_reply_hint: str, generated_reply: str) -> str:
+        candidate = (generated_reply or "").strip()
+        if not candidate:
+            return fast_reply_hint
+        topic_pattern, acknowledgement = self._match_fast_acknowledgement(elder_message)
+        if topic_pattern is None or topic_pattern.search(candidate):
+            return candidate
+        follow_up = self._extract_reference_question(candidate) or candidate
+        if follow_up == acknowledgement:
+            return fast_reply_hint
+        return f"{acknowledgement}{follow_up}"
+
+    def _build_fast_reply(
+        self,
+        elder_message: str,
+        target_slot: str,
+        reference_reply: str,
+        extracted_slots: Dict[str, List[str]],
+    ) -> str:
+        acknowledgement = self._build_fast_acknowledgement(elder_message)
+        same_topic = bool(extracted_slots.get(target_slot))
+        guidance = self._build_fast_guidance(target_slot)
+        next_prompt = guidance
+        if same_topic:
+            reference_question = self._extract_reference_question(reference_reply)
+            if reference_question and len(reference_question) <= 28:
+                next_prompt = reference_question
+        if same_topic:
+            return f"{acknowledgement}順著您剛剛提到的，{next_prompt}"
+        return f"{acknowledgement}我先記下來，也順便幫您確認一下，{next_prompt}"
 
     def _register_extracted_slots(self, extracted: Dict[str, List[str]]) -> None:
         for slot_name, values in extracted.items():
@@ -566,6 +676,247 @@ class VirtualChildRLSystem:
             if any(re.search(pattern, combined_text) for pattern in patterns):
                 concerns.append(label)
         return concerns
+
+    def _background_process_turn(
+        self,
+        *,
+        token: int,
+        turn_index: int,
+        elder_message: str,
+        source_script: Dict[str, Any],
+        source_step: Dict[str, Any],
+        selected_script: Dict[str, Any],
+        reference_reply: str,
+        fast_reply_hint: str,
+        current_target_slot: str,
+        target_slot_items: List[str],
+        pending_items: List[str],
+        recent_turns: List[Dict[str, Any]],
+        filled_slots_snapshot: Dict[str, List[str]],
+        slot_value_details_snapshot: Dict[str, Dict[str, List[str]]],
+        regex_extracted: Dict[str, List[str]],
+        similarity_score: float,
+        rule_deviation: int,
+        ranked_candidates: List[Dict[str, Any]],
+        transition_mode: bool,
+    ) -> None:
+        if self.llm is None:
+            return
+
+        try:
+            analysis = self.llm.analyze_turn(
+                elder_message=elder_message,
+                current_script=source_script,
+                current_step=source_step,
+                recent_turns=recent_turns,
+                filled_slots=filled_slots_snapshot,
+                slot_definitions=SLOT_DEFINITIONS,
+                regex_extracted=regex_extracted,
+                similarity_score=similarity_score,
+                similarity_deviation=rule_deviation,
+                ranked_candidates=ranked_candidates,
+            )
+            generation = self.llm.generate_reply(
+                elder_message=elder_message,
+                selected_script=selected_script,
+                reference_reply=reference_reply,
+                fast_reply_hint=fast_reply_hint,
+                current_target_slot=current_target_slot,
+                target_slot_items=target_slot_items,
+                pending_items=pending_items,
+                filled_slots=filled_slots_snapshot,
+                slot_value_details=slot_value_details_snapshot,
+                analysis=analysis,
+                recent_turns=recent_turns,
+                ranked_candidates=ranked_candidates,
+                transition_mode=transition_mode,
+            )
+
+            with self.session.lock:
+                if token != self.session.analysis_token:
+                    return
+
+                self._register_llm_slot_candidates(analysis)
+                self.session.latest_emotion = {
+                    "label": analysis.emotion.label,
+                    "intensity": analysis.emotion.intensity,
+                    "evidence": analysis.emotion.evidence,
+                }
+                self.session.latest_analysis = analysis.to_dict()
+                self.session.latest_analysis["status"] = "completed"
+                refined_reply = self._blend_generated_reply(elder_message, fast_reply_hint, generation.reply)
+                generation_dict = generation.to_dict()
+                generation_dict["reply"] = refined_reply
+                self.session.latest_analysis["generation"] = generation_dict
+                self.session.latest_assistant_message = refined_reply or self.session.latest_assistant_message
+                self.session.background_processing = False
+
+                if 0 <= turn_index < len(self.session.turns):
+                    turn = self.session.turns[turn_index]
+                    turn.deviation_level = max(turn.deviation_level, analysis.deviation_level or 0)
+                    turn.emotion_label = analysis.emotion.label
+                    turn.emotion_intensity = analysis.emotion.intensity
+                    turn.llm_analysis_summary = analysis.summary
+                    turn.llm_concerns = list(analysis.concerns)
+
+        except Exception as exc:  # pragma: no cover - network dependent
+            logger.warning("Background LLM processing failed: %s", exc)
+            with self.session.lock:
+                if token != self.session.analysis_token:
+                    return
+                self.session.background_processing = False
+                self.session.latest_analysis = {
+                    "status": "failed",
+                    "summary": "",
+                    "error": str(exc),
+                    "emotion": {"label": "分析失敗", "intensity": 0.0, "evidence": ""},
+                    "slot_candidates": [],
+                    "concerns": [],
+                    "deviation_level": rule_deviation,
+                    "model_label": self.session.llm_status.get("analysis", {}).get("model", ""),
+                }
+
+    def respond_fast(self, elder_message: str) -> Dict[str, Any]:
+        if not self.session.started:
+            self.start_session()
+
+        with self.session.lock:
+            source_script = dict(self.current_script)
+            source_step = {
+                "child_dialogue": self.current_step["child_dialogue"],
+                "expected_grandma_response": self.current_step["expected_grandma_response"],
+            }
+            expected = source_step["expected_grandma_response"]
+            assistant_message = source_step["child_dialogue"]
+            similarity = self.similarity.score(expected, elder_message)
+            rule_deviation = self.similarity.deviation_level(similarity)
+            extracted_slots = self.extractor.extract(elder_message)
+            self._register_extracted_slots(extracted_slots)
+
+            high_deviation = rule_deviation >= 2
+            self.session.last_deviation_high = high_deviation
+            if high_deviation:
+                self.session.transitions_used += 1
+
+            turn = RuntimeTurn(
+                turn=len(self.session.turns) + 1,
+                assistant_message=assistant_message,
+                elder_message=elder_message,
+                expected_response=expected,
+                script_id=self.session.current_script_id,
+                target_slot=self.current_script["target_slot"],
+                similarity=similarity,
+                deviation_level=rule_deviation,
+                extracted_slots=extracted_slots,
+                transition_used=high_deviation,
+            )
+            self.session.turns.append(turn)
+            turn_index = len(self.session.turns) - 1
+
+            current_state = self.build_state_vector(high_deviation)
+            target_slot_complete = self.slot_completion_ratio(self.current_script["target_slot"]) >= 1.0
+            transition_mode = False
+
+            if high_deviation:
+                next_script = self._pick_next_script(current_state, prefer_new=True)
+                self.session.current_script_id = int(next_script["script_id"])
+                self.session.current_step_index = 0
+                reference_reply = self._transition_message(next_script["target_slot"])
+                transition_mode = True
+            else:
+                reference_reply = None if target_slot_complete else self._advance_within_script()
+                if reference_reply is None:
+                    reference_reply = self._switch_script(current_state, prefer_new=target_slot_complete)
+
+            current_target_slot = self.current_script["target_slot"]
+            fast_reply = self._build_fast_reply(
+                elder_message,
+                current_target_slot,
+                reference_reply or "",
+                extracted_slots,
+            )
+            self.session.latest_assistant_message = fast_reply
+
+            ranked_candidates = self._ranked_candidate_context(current_state)
+            pending_items = [
+                item
+                for item in SLOT_DEFINITIONS[current_target_slot]
+                if item not in self.session.filled_slots.get(current_target_slot, [])
+            ]
+            filled_slots_snapshot = {key: list(values) for key, values in self.session.filled_slots.items()}
+            slot_value_details_snapshot = {
+                slot_name: {item: list(values) for item, values in item_map.items()}
+                for slot_name, item_map in self.session.slot_value_details.items()
+            }
+            recent_turns = self._recent_turn_context()
+
+            if self.llm is not None:
+                self.session.analysis_token += 1
+                token = self.session.analysis_token
+                self.session.background_processing = True
+                self.session.latest_emotion = {"label": "分析中", "intensity": 0.0, "evidence": ""}
+                self.session.latest_analysis = {
+                    "status": "pending",
+                    "summary": "背景分析中，稍後會補上情緒、填槽與較自然的回覆。",
+                    "emotion": self.session.latest_emotion,
+                    "slot_candidates": [],
+                    "concerns": [],
+                    "deviation_level": rule_deviation,
+                    "recommended_focus": current_target_slot,
+                    "model_label": self.session.llm_status.get("analysis", {}).get("model", ""),
+                }
+            else:
+                token = 0
+                self.session.background_processing = False
+                self.session.latest_emotion = {}
+                self.session.latest_analysis = {
+                    "status": "disabled",
+                    "summary": "",
+                    "emotion": {},
+                    "slot_candidates": [],
+                    "concerns": [],
+                    "deviation_level": rule_deviation,
+                }
+
+        if self.llm is not None:
+            worker = threading.Thread(
+                target=self._background_process_turn,
+                kwargs={
+                    "token": token,
+                    "turn_index": turn_index,
+                    "elder_message": elder_message,
+                    "source_script": source_script,
+                    "source_step": source_step,
+                    "selected_script": dict(self.current_script),
+                    "reference_reply": reference_reply or fast_reply,
+                    "fast_reply_hint": fast_reply,
+                    "current_target_slot": current_target_slot,
+                    "target_slot_items": list(SLOT_DEFINITIONS[current_target_slot]),
+                    "pending_items": list(pending_items),
+                    "recent_turns": list(recent_turns),
+                    "filled_slots_snapshot": filled_slots_snapshot,
+                    "slot_value_details_snapshot": slot_value_details_snapshot,
+                    "regex_extracted": {key: list(values) for key, values in extracted_slots.items()},
+                    "similarity_score": similarity,
+                    "rule_deviation": rule_deviation,
+                    "ranked_candidates": list(ranked_candidates),
+                    "transition_mode": transition_mode,
+                },
+                daemon=True,
+            )
+            worker.start()
+
+        return {
+            "assistant_message": fast_reply,
+            "similarity": similarity,
+            "deviation_level": rule_deviation,
+            "current_state": current_state,
+            "filled_slots": self.session.filled_slots,
+            "turn": turn.turn,
+            "summary": self.build_summary_dict(),
+            "analysis": self.session.latest_analysis,
+            "background_processing": self.session.background_processing,
+        }
 
     def respond(self, elder_message: str) -> Dict[str, Any]:
         if not self.session.started:
@@ -811,7 +1162,7 @@ class VirtualChildRLSystem:
         return {
             "algorithm": self.session.algorithm,
             "started": self.session.started,
-            "latest_assistant_message": latest_assistant_message,
+            "latest_assistant_message": latest_assistant_message or self.session.latest_assistant_message,
             "current_script_id": self.session.current_script_id,
             "current_target_slot": self.current_script["target_slot"] if self.session.started else None,
             "state_vector": self.build_state_vector(),
@@ -821,6 +1172,7 @@ class VirtualChildRLSystem:
             "latest_analysis": self.session.latest_analysis,
             "llm_status": self.session.llm_status,
             "available_model_presets": available_model_presets(),
+            "background_processing": self.session.background_processing,
         }
 
     def save_session(self, output_dir: Path | None = None) -> Dict[str, str]:
