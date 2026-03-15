@@ -11,6 +11,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse
 
+from llm_runtime import DEFAULT_ANALYSIS_PRESET, DEFAULT_GENERATION_PRESET
 from virtual_child_rl_system import VirtualChildRLSystem, normalize_algorithm
 
 
@@ -23,12 +24,34 @@ FRONTEND_DIR = ROOT / "care_frontend"
 SESSIONS: dict[str, VirtualChildRLSystem] = {}
 
 
-def create_system(algorithm: str) -> VirtualChildRLSystem:
-    return VirtualChildRLSystem(algorithm=normalize_algorithm(algorithm))
+def create_system(
+    algorithm: str,
+    *,
+    llm_enabled: bool = True,
+    analysis_preset: str = DEFAULT_ANALYSIS_PRESET,
+    generation_preset: str = DEFAULT_GENERATION_PRESET,
+) -> VirtualChildRLSystem:
+    return VirtualChildRLSystem(
+        algorithm=normalize_algorithm(algorithm),
+        llm_enabled=llm_enabled,
+        analysis_preset=analysis_preset,
+        generation_preset=generation_preset,
+    )
 
 
-def create_session(algorithm: str) -> tuple[str, VirtualChildRLSystem, str]:
-    system = create_system(algorithm)
+def create_session(
+    algorithm: str,
+    *,
+    llm_enabled: bool = True,
+    analysis_preset: str = DEFAULT_ANALYSIS_PRESET,
+    generation_preset: str = DEFAULT_GENERATION_PRESET,
+) -> tuple[str, VirtualChildRLSystem, str]:
+    system = create_system(
+        algorithm,
+        llm_enabled=llm_enabled,
+        analysis_preset=analysis_preset,
+        generation_preset=generation_preset,
+    )
     opening_message = system.start_session()
     session_id = uuid.uuid4().hex
     SESSIONS[session_id] = system
@@ -58,13 +81,23 @@ class CareCompanionHandler(BaseHTTPRequestHandler):
 
         if parsed.path == "/api/session":
             algorithm = normalize_algorithm(payload.get("algorithm", "dqn"))
-            session_id, system, opening_message = create_session(algorithm)
+            session_id, system, opening_message = create_session(
+                algorithm,
+                llm_enabled=bool(payload.get("llm_enabled", True)),
+                analysis_preset=str(payload.get("analysis_preset", DEFAULT_ANALYSIS_PRESET)),
+                generation_preset=str(payload.get("generation_preset", DEFAULT_GENERATION_PRESET)),
+            )
             self._send_json(serialize_session(session_id, system, opening_message))
             return
 
         if parsed.path == "/api/reset":
             algorithm = normalize_algorithm(payload.get("algorithm", "dqn"))
-            session_id, system, opening_message = create_session(algorithm)
+            session_id, system, opening_message = create_session(
+                algorithm,
+                llm_enabled=bool(payload.get("llm_enabled", True)),
+                analysis_preset=str(payload.get("analysis_preset", DEFAULT_ANALYSIS_PRESET)),
+                generation_preset=str(payload.get("generation_preset", DEFAULT_GENERATION_PRESET)),
+            )
             self._send_json(serialize_session(session_id, system, opening_message))
             return
 

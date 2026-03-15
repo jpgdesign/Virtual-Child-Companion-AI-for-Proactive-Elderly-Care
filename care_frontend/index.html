@@ -16,26 +16,26 @@
         <p class="eyebrow">Interactive Care Frontend</p>
         <h1>虛擬子女照護陪伴系統</h1>
         <p class="hero-text">
-          以 DQN / Q-learning 驅動長者陪伴對話，整合槽位收集、偏離偵測、重聚焦提示與家屬摘要，
-          讓 CLI runtime 變成可以直接操作的照護前端。
+          以 DQN / Q-learning 決定對話策略，並把參考劇本、槽位狀態與情緒分析送進大語言模型，
+          讓回覆不再只是模板，而是「RL 選方向、LLM 負責理解與自然生成」的混合流程。
         </p>
       </div>
 
       <div class="hero-highlights">
         <article class="highlight-card">
-          <span class="highlight-kicker">RL 核心</span>
+          <span class="highlight-kicker">RL 決策</span>
           <strong>DQN / Q-learning</strong>
-          <p>同一套前端可直接切換策略模式，方便比較對話流程表現。</p>
+          <p>保留可比較的對話策略選擇，下一步要問哪個槽位仍由 RL 負責。</p>
         </article>
         <article class="highlight-card">
-          <span class="highlight-kicker">語音互動</span>
-          <strong>瀏覽器 STT / TTS</strong>
-          <p>支援語音輸入與語音播報，沒有麥克風也能退回純文字模式。</p>
+          <span class="highlight-kicker">LLM 整合</span>
+          <strong>分析 + 生成</strong>
+          <p>情緒分析、填槽、偏離判斷與自然回覆都能接入你提供的本地模型端點。</p>
         </article>
         <article class="highlight-card">
           <span class="highlight-kicker">照護摘要</span>
           <strong>即時 dashboard</strong>
-          <p>右側同步顯示槽位進度、照護提醒與可交付給家屬的摘要內容。</p>
+          <p>右側同步顯示槽位進度、情緒與分析摘要，方便家屬或照護者快速掌握。</p>
         </article>
       </div>
     </header>
@@ -46,7 +46,7 @@
           <div>
             <p class="section-label">Conversation Runtime</p>
             <h2>陪伴對話工作區</h2>
-            <p class="panel-text">左側專注在互動與收斂節奏，右側持續追蹤照護進度與風險提示。</p>
+            <p class="panel-text">先由 RL 選擇要走哪份劇本與槽位，再交給 LLM 做情緒理解、填槽與語句生成。</p>
           </div>
 
           <div class="control-cluster">
@@ -57,6 +57,22 @@
                 <option value="q_learning">Q-learning</option>
               </select>
             </label>
+
+            <label class="field" for="analysis-preset-select">
+              <span>分析模型</span>
+              <select id="analysis-preset-select"></select>
+            </label>
+
+            <label class="field" for="generation-preset-select">
+              <span>生成模型</span>
+              <select id="generation-preset-select"></select>
+            </label>
+
+            <label class="toggle-field" for="llm-enabled-checkbox">
+              <span>LLM 混合模式</span>
+              <input id="llm-enabled-checkbox" class="toggle-input" type="checkbox" checked>
+            </label>
+
             <button id="reset-button" class="ghost-button" type="button">重設對話</button>
           </div>
         </div>
@@ -79,7 +95,7 @@
             <textarea
               id="message-input"
               rows="4"
-              placeholder="例如：我今天早餐吃稀飯，剛剛量血壓覺得有點頭暈。"
+              placeholder="例如：我今天早餐吃稀飯，量完血壓有點暈，不過藥有按時吃。"
             ></textarea>
           </label>
 
@@ -95,6 +111,14 @@
           <p class="section-label">Session Snapshot</p>
           <h2>互動摘要</h2>
           <div id="summary-cards" class="summary-grid"></div>
+          <div id="llm-overview" class="llm-overview"></div>
+        </section>
+
+        <section class="dashboard-card">
+          <p class="section-label">LLM Insight</p>
+          <h2>分析結果</h2>
+          <div id="emotion-panel" class="emotion-panel"></div>
+          <p id="analysis-summary" class="analysis-note"></p>
         </section>
 
         <section class="dashboard-card">

@@ -1,6 +1,21 @@
+const fallbackPresets = {
+  qwen3_ollama: {
+    provider: "ollama",
+    model: "qwen3:8b",
+  },
+  qwen35_lmstudio: {
+    provider: "openai",
+    model: "qwen3.5-9b-claude",
+  },
+};
+
 const state = {
   sessionId: null,
   algorithm: "dqn",
+  llmEnabled: true,
+  analysisPreset: "qwen35_lmstudio",
+  generationPreset: "qwen35_lmstudio",
+  availablePresets: { ...fallbackPresets },
   speechEnabled: true,
   speechRecognitionSupported: true,
   recognition: null,
@@ -10,6 +25,9 @@ const state = {
 
 const elements = {
   algorithmSelect: document.getElementById("algorithm-select"),
+  analysisPresetSelect: document.getElementById("analysis-preset-select"),
+  generationPresetSelect: document.getElementById("generation-preset-select"),
+  llmEnabledCheckbox: document.getElementById("llm-enabled-checkbox"),
   composerForm: document.getElementById("composer-form"),
   resetButton: document.getElementById("reset-button"),
   statusBand: document.getElementById("status-band"),
@@ -20,6 +38,9 @@ const elements = {
   speakToggle: document.getElementById("speak-toggle"),
   voiceStatus: document.getElementById("voice-status"),
   summaryCards: document.getElementById("summary-cards"),
+  llmOverview: document.getElementById("llm-overview"),
+  emotionPanel: document.getElementById("emotion-panel"),
+  analysisSummary: document.getElementById("analysis-summary"),
   slotProgress: document.getElementById("slot-progress"),
   concernList: document.getElementById("concern-list"),
   focusList: document.getElementById("focus-list"),
@@ -62,6 +83,14 @@ function toAlgorithmLabel(name) {
   return name === "q_learning" ? "Q-learning" : String(name || "dqn").toUpperCase();
 }
 
+function getPresetLabel(presetId) {
+  const preset = state.availablePresets[presetId] || fallbackPresets[presetId];
+  if (!preset) {
+    return presetId;
+  }
+  return `${preset.model} (${preset.provider})`;
+}
+
 function getVoiceModeLabel() {
   if (state.listening) {
     return "收音中";
@@ -90,7 +119,7 @@ function renderEmptyState() {
   elements.chatThread.innerHTML = `
     <div class="empty-state">
       <strong>正在建立新的陪伴對話 session</strong>
-      <p>系統會先產生開場提示，接著你可以用文字或語音模擬長者回覆。</p>
+      <p>系統會先選擇一個目標槽位，再由 RL 與 LLM 一起決定接下來的問法。</p>
     </div>
   `;
 }
@@ -133,15 +162,19 @@ function renderChat(payload) {
     elements.chatThread.appendChild(createBubble("assistant", latestPrompt, ["開場提示", currentTarget]));
   } else {
     turns.forEach((turn) => {
-      elements.chatThread.appendChild(
-        createBubble("assistant", turn.assistant_message, [`劇本 ${turn.script_id}`, `目標 ${turn.target_slot}`])
-      );
+      const assistantTags = [`劇本 ${turn.script_id}`, `目標 ${turn.target_slot}`];
+      if (turn.generated_by_llm) {
+        assistantTags.push("LLM 生成");
+      }
+      elements.chatThread.appendChild(createBubble("assistant", turn.assistant_message, assistantTags));
 
       const tags = [`偏離等級 ${turn.deviation_level}`];
       if (turn.transition_used) {
         tags.push("已觸發轉場");
       }
-
+      if (turn.emotion_label) {
+        tags.push(`情緒 ${turn.emotion_label}`);
+      }
       elements.chatThread.appendChild(createBubble("user", turn.elder_message, tags));
     });
 
@@ -155,15 +188,20 @@ function renderChat(payload) {
 
 function renderStatusBand(payload) {
   const summary = payload?.summary || {};
+  const llmStatus = summary.llm_status || payload?.llm_status || {};
   const nextFocus = Array.isArray(summary.next_focus_slots) && summary.next_focus_slots.length
     ? summary.next_focus_slots[0]
     : "等待對話資料";
+
+  const llmDetail = llmStatus.enabled
+    ? `${getPresetLabel(state.analysisPreset)} -> ${getPresetLabel(state.generationPreset)}`
+    : "已停用，改用純 RL + 規則";
 
   const cards = [
     {
       label: "策略模式",
       value: toAlgorithmLabel(payload?.algorithm || state.algorithm),
-      detail: "可在 DQN 與 Q-learning 間切換",
+      detail: "DQN 負責選擇下一份劇本",
       emphasis: false,
     },
     {
@@ -173,9 +211,9 @@ function renderStatusBand(payload) {
       emphasis: true,
     },
     {
-      label: "對話進度",
-      value: `${summary.total_turns || 0} 輪`,
-      detail: `偏題轉場 ${summary.transitions_used || 0} 次`,
+      label: "LLM 模式",
+      value: llmStatus.enabled ? "分析 + 生成" : "已關閉",
+      detail: llmDetail,
       emphasis: false,
     },
     {
@@ -200,6 +238,55 @@ function renderStatusBand(payload) {
   });
 }
 
+function renderLLMOverview(summary, payload) {
+  const llmStatus = summary.llm_status || payload?.llm_status || {};
+  const analysis = payload?.latest_analysis || {};
+  const emotion = summary.latest_emotion || analysis.emotion || {};
+
+  elements.llmOverview.innerHTML = "";
+
+  const entries = [
+    { label: "LLM 狀態", value: llmStatus.enabled ? "啟用中" : "已停用" },
+    { label: "分析模型", value: llmStatus.analysis?.model || getPresetLabel(state.analysisPreset) },
+    { label: "生成模型", value: llmStatus.generation?.model || getPresetLabel(state.generationPreset) },
+    { label: "最新情緒", value: emotion.label || "尚無分析" },
+  ];
+
+  entries.forEach((item) => {
+    const chip = document.createElement("span");
+    chip.className = "chip is-muted";
+    chip.textContent = `${item.label}：${item.value}`;
+    elements.llmOverview.appendChild(chip);
+  });
+}
+
+function renderEmotionPanel(summary, payload) {
+  const analysis = payload?.latest_analysis || {};
+  const emotion = summary.latest_emotion || analysis.emotion || {};
+  const concerns = Array.isArray(analysis.concerns) ? analysis.concerns : [];
+
+  const pills = [
+    { label: "情緒", value: emotion.label || "未分析" },
+    { label: "強度", value: formatMetric(emotion.intensity) },
+    { label: "偏離", value: String(analysis.deviation_level ?? summary.average_deviation ?? 0) },
+    { label: "提醒", value: concerns.length ? `${concerns.length} 項` : "無" },
+  ];
+
+  elements.emotionPanel.innerHTML = "";
+  pills.forEach((item) => {
+    const pill = document.createElement("article");
+    pill.className = "status-card";
+    pill.innerHTML = `
+      <span class="status-label">${item.label}</span>
+      <span class="status-value">${item.value}</span>
+    `;
+    elements.emotionPanel.appendChild(pill);
+  });
+
+  const summaryText = analysis.summary || summary.latest_analysis_summary || "這一輪尚無 LLM 分析摘要。";
+  elements.analysisSummary.textContent = summaryText;
+}
+
 function renderSummary(summary, payload) {
   const safeSummary = summary || {};
 
@@ -219,6 +306,9 @@ function renderSummary(summary, payload) {
     elements.summaryCards.appendChild(block);
   });
 
+  renderLLMOverview(safeSummary, payload);
+  renderEmotionPanel(safeSummary, payload);
+
   elements.slotProgress.innerHTML = "";
   const slotCompletion = safeSummary.slot_completion || {};
   Object.entries(slotCompletion).forEach(([slotName, info]) => {
@@ -227,6 +317,11 @@ function renderSummary(summary, payload) {
     const filledItems = Array.isArray(info.filled_items) && info.filled_items.length
       ? info.filled_items.join("、")
       : "尚未收集到具體項目";
+
+    const valueNotes = Object.entries(info.value_notes || {})
+      .map(([item, values]) => `${item}：${Array.isArray(values) ? values.join(" / ") : ""}`)
+      .filter(Boolean)
+      .join("；");
 
     card.innerHTML = `
       <div class="slot-head">
@@ -237,6 +332,7 @@ function renderSummary(summary, payload) {
         <div class="slot-fill" style="width: ${formatPercent(info.completion_ratio)}"></div>
       </div>
       <div class="slot-meta">${filledItems}</div>
+      ${valueNotes ? `<div class="slot-meta">${valueNotes}</div>` : ""}
     `;
     elements.slotProgress.appendChild(card);
   });
@@ -269,9 +365,48 @@ function renderChipList(root, items, extraClass, fallbackText) {
   });
 }
 
+function syncPresetState(payload) {
+  if (payload?.available_model_presets) {
+    state.availablePresets = payload.available_model_presets;
+  }
+  if (payload?.llm_status?.analysis?.preset) {
+    state.analysisPreset = payload.llm_status.analysis.preset;
+  }
+  if (payload?.llm_status?.generation?.preset) {
+    state.generationPreset = payload.llm_status.generation.preset;
+  }
+  if (payload?.llm_status?.enabled !== undefined) {
+    state.llmEnabled = Boolean(payload.llm_status.enabled);
+  }
+  populatePresetOptions();
+}
+
+function populatePresetOptions() {
+  const presets = state.availablePresets || fallbackPresets;
+  const optionsHtml = Object.keys(presets)
+    .map((key) => `<option value="${key}">${getPresetLabel(key)}</option>`)
+    .join("");
+
+  elements.analysisPresetSelect.innerHTML = optionsHtml;
+  elements.generationPresetSelect.innerHTML = optionsHtml;
+  elements.analysisPresetSelect.value = state.analysisPreset;
+  elements.generationPresetSelect.value = state.generationPreset;
+  elements.llmEnabledCheckbox.checked = state.llmEnabled;
+}
+
+function buildSessionConfig() {
+  return {
+    algorithm: state.algorithm,
+    llm_enabled: state.llmEnabled,
+    analysis_preset: state.analysisPreset,
+    generation_preset: state.generationPreset,
+  };
+}
+
 function applyPayload(payload) {
   state.sessionId = payload.session_id || state.sessionId;
   state.lastPayload = payload;
+  syncPresetState(payload);
   renderStatusBand(payload);
   renderChat(payload);
   renderSummary(payload.summary, payload);
@@ -284,7 +419,7 @@ function setSendingState(isSending) {
 
 async function createSession() {
   renderEmptyState();
-  const payload = await requestJson("/api/session", { algorithm: state.algorithm });
+  const payload = await requestJson("/api/session", buildSessionConfig());
   applyPayload(payload);
   speak(payload.latest_assistant_message);
 }
@@ -303,7 +438,7 @@ async function sendMessage() {
     });
     elements.messageInput.value = "";
     applyPayload(payload);
-    setVoiceStatus("已更新回應與摘要");
+    setVoiceStatus("已更新回應、填槽與分析摘要");
     speak(payload.latest_assistant_message);
   } catch (error) {
     setVoiceStatus(`送出失敗：${error.message}`);
@@ -314,7 +449,7 @@ async function sendMessage() {
 
 async function resetSession() {
   renderEmptyState();
-  const payload = await requestJson("/api/reset", { algorithm: state.algorithm });
+  const payload = await requestJson("/api/reset", buildSessionConfig());
   applyPayload(payload);
   setVoiceStatus("已建立新的對話 session");
   speak(payload.latest_assistant_message);
@@ -385,6 +520,16 @@ function handleListen() {
   }
 }
 
+async function handleConfigChange() {
+  state.algorithm = elements.algorithmSelect.value;
+  state.analysisPreset = elements.analysisPresetSelect.value;
+  state.generationPreset = elements.generationPresetSelect.value;
+  state.llmEnabled = elements.llmEnabledCheckbox.checked;
+  if (state.sessionId) {
+    await resetSession();
+  }
+}
+
 function bindEvents() {
   elements.composerForm.addEventListener("submit", (event) => {
     event.preventDefault();
@@ -398,17 +543,17 @@ function bindEvents() {
     }
   });
 
-  elements.algorithmSelect.addEventListener("change", async (event) => {
-    state.algorithm = event.target.value;
-    await resetSession();
-  });
-
+  elements.algorithmSelect.addEventListener("change", handleConfigChange);
+  elements.analysisPresetSelect.addEventListener("change", handleConfigChange);
+  elements.generationPresetSelect.addEventListener("change", handleConfigChange);
+  elements.llmEnabledCheckbox.addEventListener("change", handleConfigChange);
   elements.resetButton.addEventListener("click", resetSession);
   elements.listenButton.addEventListener("click", handleListen);
   elements.speakToggle.addEventListener("click", toggleSpeechOutput);
 }
 
 async function init() {
+  populatePresetOptions();
   elements.algorithmSelect.value = state.algorithm;
   bindEvents();
   initSpeechRecognition();

@@ -14,6 +14,14 @@ import numpy as np
 
 from R_data import RewardCalculator
 from dueling_dqn import DuelingDQNAgent
+from llm_runtime import (
+    DEFAULT_ANALYSIS_PRESET,
+    DEFAULT_GENERATION_PRESET,
+    HybridLLMOrchestrator,
+    LLMAnalysisResult,
+    build_endpoint_config,
+    available_model_presets,
+)
 from tabular_q_learning import TabularQLearningAgent
 
 try:
@@ -140,6 +148,11 @@ class RuntimeTurn:
     deviation_level: int
     extracted_slots: Dict[str, List[str]]
     transition_used: bool
+    emotion_label: str = ""
+    emotion_intensity: float = 0.0
+    llm_analysis_summary: str = ""
+    llm_concerns: List[str] = field(default_factory=list)
+    generated_by_llm: bool = False
 
 
 @dataclass
@@ -149,11 +162,16 @@ class RuntimeSession:
     model_path: str
     turns: List[RuntimeTurn] = field(default_factory=list)
     filled_slots: Dict[str, List[str]] = field(default_factory=dict)
+    slot_value_details: Dict[str, Dict[str, List[str]]] = field(default_factory=dict)
     current_script_id: int = 0
     current_step_index: int = 0
     transitions_used: int = 0
     last_deviation_high: bool = False
     started: bool = False
+    latest_emotion: Dict[str, Any] = field(default_factory=dict)
+    latest_analysis: Dict[str, Any] = field(default_factory=dict)
+    llm_enabled: bool = False
+    llm_status: Dict[str, Any] = field(default_factory=dict)
 
     def add_slot_values(self, slot_name: str, values: Iterable[str]) -> None:
         if slot_name not in self.filled_slots:
@@ -161,6 +179,13 @@ class RuntimeSession:
         for value in values:
             if value not in self.filled_slots[slot_name]:
                 self.filled_slots[slot_name].append(value)
+
+    def add_slot_value_detail(self, slot_name: str, item_name: str, value: str) -> None:
+        if not value:
+            return
+        self.slot_value_details.setdefault(slot_name, {}).setdefault(item_name, [])
+        if value not in self.slot_value_details[slot_name][item_name]:
+            self.slot_value_details[slot_name][item_name].append(value)
 
 
 class SimilarityScorer:
@@ -352,6 +377,17 @@ class PolicyRuntime:
         q_values = self.agent.get_q_values(state)
         return sorted(candidate_ids, key=lambda script_id: float(q_values[script_id - 1]), reverse=True)
 
+    def ranked_candidates(self, state: Sequence[int], allowed_script_ids: Sequence[int], limit: int = 3) -> List[Dict[str, Any]]:
+        candidate_ids = self.ranked_script_ids(state, allowed_script_ids)
+        q_values = self.agent.get_q_values(state)
+        return [
+            {
+                "script_id": script_id,
+                "q_value": round(float(q_values[script_id - 1]), 4),
+            }
+            for script_id in candidate_ids[:limit]
+        ]
+
 
 class VirtualChildRLSystem:
     def __init__(
@@ -362,6 +398,9 @@ class VirtualChildRLSystem:
         model_dir: Path | None = None,
         policy_epochs: int = 180,
         policy_batch_size: int = 16,
+        llm_enabled: bool = True,
+        analysis_preset: str = DEFAULT_ANALYSIS_PRESET,
+        generation_preset: str = DEFAULT_GENERATION_PRESET,
     ) -> None:
         self.script_file = script_file or find_latest_file("grandma_session_*/*/奶奶對話劇本_*.json")
         self.training_file = training_file or find_latest_file("rl_data_*.json")
@@ -382,10 +421,21 @@ class VirtualChildRLSystem:
 
         self.similarity = SimilarityScorer()
         self.extractor = KeywordSlotExtractor(SLOT_PATTERNS)
+        self.llm_enabled = llm_enabled
+        self.llm = None
+        llm_status: Dict[str, Any] = {"enabled": False}
+        if llm_enabled:
+            self.llm = HybridLLMOrchestrator(
+                analysis_config=build_endpoint_config(analysis_preset, fallback=DEFAULT_ANALYSIS_PRESET),
+                generation_config=build_endpoint_config(generation_preset, fallback=DEFAULT_GENERATION_PRESET),
+            )
+            llm_status = self.llm.status_dict()
         self.session = RuntimeSession(
             algorithm=self.policy.algorithm,
             script_file=str(self.script_file),
             model_path=str(self.policy.model_path),
+            llm_enabled=llm_enabled,
+            llm_status=llm_status,
         )
 
     def build_state_vector(self, high_deviation: bool | None = None) -> List[int]:
@@ -442,9 +492,55 @@ class VirtualChildRLSystem:
     def current_step(self) -> Dict[str, Any]:
         return self.current_script["steps"][self.session.current_step_index]
 
+    def _recent_turn_context(self, limit: int = 4) -> List[Dict[str, Any]]:
+        return [
+            {
+                "turn": turn.turn,
+                "assistant_message": turn.assistant_message,
+                "elder_message": turn.elder_message,
+                "target_slot": turn.target_slot,
+                "deviation_level": turn.deviation_level,
+                "emotion_label": turn.emotion_label,
+            }
+            for turn in self.session.turns[-limit:]
+        ]
+
+    def _ranked_candidate_context(self, state: Sequence[int], limit: int = 3) -> List[Dict[str, Any]]:
+        allowed_script_ids = self._allowed_script_ids()
+        ranked = self.policy.ranked_candidates(state, allowed_script_ids, limit=limit)
+        enriched: List[Dict[str, Any]] = []
+        for candidate in ranked:
+            script = self.scripts_by_id.get(int(candidate["script_id"]))
+            if not script:
+                continue
+            enriched.append(
+                {
+                    **candidate,
+                    "target_slot": script["target_slot"],
+                    "reference_reply": script["steps"][0]["child_dialogue"],
+                }
+            )
+        return enriched
+
     def _register_extracted_slots(self, extracted: Dict[str, List[str]]) -> None:
         for slot_name, values in extracted.items():
             self.session.add_slot_values(slot_name, values)
+
+    def _register_llm_slot_candidates(self, analysis: LLMAnalysisResult) -> None:
+        for candidate in analysis.slot_candidates:
+            if candidate.slot not in SLOT_DEFINITIONS:
+                continue
+            if candidate.item not in SLOT_DEFINITIONS[candidate.slot]:
+                continue
+            self.session.add_slot_values(candidate.slot, [candidate.item])
+            self.session.add_slot_value_detail(candidate.slot, candidate.item, candidate.value)
+
+    def _merge_concerns(self, llm_concerns: Sequence[str]) -> List[str]:
+        combined = self._detect_concerns()
+        for concern in llm_concerns:
+            if concern not in combined:
+                combined.append(concern)
+        return combined
 
     def _transition_message(self, target_slot: str) -> str:
         templates = TRANSITION_TEMPLATES.get(target_slot, TRANSITION_TEMPLATES["作息活動"])
@@ -478,14 +574,48 @@ class VirtualChildRLSystem:
         expected = self.current_step["expected_grandma_response"]
         assistant_message = self.current_step["child_dialogue"]
         similarity = self.similarity.score(expected, elder_message)
-        deviation_level = self.similarity.deviation_level(similarity)
+        rule_deviation = self.similarity.deviation_level(similarity)
         extracted_slots = self.extractor.extract(elder_message)
         self._register_extracted_slots(extracted_slots)
 
+        ranked_candidates_before = self._ranked_candidate_context(self.build_state_vector(False))
+        analysis = LLMAnalysisResult()
+        if self.llm is not None:
+            try:
+                analysis = self.llm.analyze_turn(
+                    elder_message=elder_message,
+                    current_script=self.current_script,
+                    current_step=self.current_step,
+                    recent_turns=self._recent_turn_context(),
+                    filled_slots=self.session.filled_slots,
+                    slot_definitions=SLOT_DEFINITIONS,
+                    regex_extracted=extracted_slots,
+                    similarity_score=similarity,
+                    similarity_deviation=rule_deviation,
+                    ranked_candidates=ranked_candidates_before,
+                )
+                self._register_llm_slot_candidates(analysis)
+            except Exception as exc:  # pragma: no cover - network dependent
+                logger.warning("LLM analysis failed, falling back to rule-based flow: %s", exc)
+                analysis = LLMAnalysisResult(summary="", raw_content=str(exc))
+
+        deviation_level = rule_deviation
+        if analysis.deviation_level is not None:
+            deviation_level = max(rule_deviation, max(0, min(3, analysis.deviation_level)))
+
         high_deviation = deviation_level >= 2
+        if analysis.should_transition is True:
+            high_deviation = True
         self.session.last_deviation_high = high_deviation
         if high_deviation:
             self.session.transitions_used += 1
+
+        self.session.latest_emotion = {
+            "label": analysis.emotion.label,
+            "intensity": analysis.emotion.intensity,
+            "evidence": analysis.emotion.evidence,
+        }
+        self.session.latest_analysis = analysis.to_dict()
 
         turn = RuntimeTurn(
             turn=len(self.session.turns) + 1,
@@ -498,21 +628,55 @@ class VirtualChildRLSystem:
             deviation_level=deviation_level,
             extracted_slots=extracted_slots,
             transition_used=high_deviation,
+            emotion_label=analysis.emotion.label,
+            emotion_intensity=analysis.emotion.intensity,
+            llm_analysis_summary=analysis.summary,
+            llm_concerns=list(analysis.concerns),
         )
         self.session.turns.append(turn)
 
         current_state = self.build_state_vector(high_deviation)
         target_slot_complete = self.slot_completion_ratio(self.current_script["target_slot"]) >= 1.0
+        transition_mode = False
 
         if high_deviation:
             next_script = self._pick_next_script(current_state, prefer_new=True)
             self.session.current_script_id = int(next_script["script_id"])
             self.session.current_step_index = 0
             next_message = self._transition_message(next_script["target_slot"])
+            transition_mode = True
         else:
             next_message = None if target_slot_complete else self._advance_within_script()
             if next_message is None:
                 next_message = self._switch_script(current_state, prefer_new=target_slot_complete)
+
+        ranked_candidates_after = self._ranked_candidate_context(current_state)
+        if self.llm is not None and next_message:
+            try:
+                generation = self.llm.generate_reply(
+                    elder_message=elder_message,
+                    selected_script=self.current_script,
+                    reference_reply=next_message,
+                    current_target_slot=self.current_script["target_slot"],
+                    target_slot_items=SLOT_DEFINITIONS[self.current_script["target_slot"]],
+                    pending_items=[
+                        item
+                        for item in SLOT_DEFINITIONS[self.current_script["target_slot"]]
+                        if item not in self.session.filled_slots.get(self.current_script["target_slot"], [])
+                    ],
+                    filled_slots=self.session.filled_slots,
+                    slot_value_details=self.session.slot_value_details,
+                    analysis=analysis,
+                    recent_turns=self._recent_turn_context(),
+                    ranked_candidates=ranked_candidates_after,
+                    transition_mode=transition_mode,
+                )
+                if generation.reply:
+                    next_message = generation.reply
+                    turn.generated_by_llm = True
+                    self.session.latest_analysis["generation"] = generation.to_dict()
+            except Exception as exc:  # pragma: no cover - network dependent
+                logger.warning("LLM generation failed, using reference reply: %s", exc)
 
         return {
             "assistant_message": next_message,
@@ -522,6 +686,7 @@ class VirtualChildRLSystem:
             "filled_slots": self.session.filled_slots,
             "turn": turn.turn,
             "summary": self.build_summary_dict(),
+            "analysis": self.session.latest_analysis,
         }
 
     def build_summary_dict(self) -> Dict[str, Any]:
@@ -531,6 +696,7 @@ class VirtualChildRLSystem:
             slot_name: {
                 "filled_items": self.session.filled_slots.get(slot_name, []),
                 "completion_ratio": round(self.slot_completion_ratio(slot_name), 3),
+                "value_notes": self.session.slot_value_details.get(slot_name, {}),
             }
             for slot_name in SLOT_ORDER
         }
@@ -543,8 +709,11 @@ class VirtualChildRLSystem:
             "average_deviation": round(average_deviation, 3),
             "transitions_used": self.session.transitions_used,
             "slot_completion": completion,
-            "concerns": self._detect_concerns(),
+            "concerns": self._merge_concerns(self.session.latest_analysis.get("concerns", [])),
             "next_focus_slots": self.get_incomplete_slots(),
+            "latest_emotion": self.session.latest_emotion,
+            "latest_analysis_summary": self.session.latest_analysis.get("summary", ""),
+            "llm_status": self.session.llm_status,
         }
 
     def render_caregiver_summary(self) -> str:
@@ -572,6 +741,26 @@ class VirtualChildRLSystem:
 
         next_focus = summary["next_focus_slots"] or ["目前四大槽位皆已有資料，可改追蹤趨勢變化"]
         lines.extend(["", "## 下一步建議", *[f"- {item}" for item in next_focus]])
+        latest_emotion = summary.get("latest_emotion") or {}
+        if latest_emotion:
+            lines.extend(
+                [
+                    "",
+                    "## LLM 分析",
+                    f"- 最新情緒：`{latest_emotion.get('label', '平穩')}`",
+                    f"- 情緒強度：`{latest_emotion.get('intensity', 0.0)}`",
+                ]
+            )
+
+        latest_analysis_summary = summary.get("latest_analysis_summary")
+        if latest_analysis_summary:
+            lines.append(f"- 分析摘要：{latest_analysis_summary}")
+
+        llm_status = summary.get("llm_status") or {}
+        if llm_status.get("enabled"):
+            lines.append(f"- 分析模型：`{llm_status.get('analysis', {}).get('model', '')}`")
+            lines.append(f"- 生成模型：`{llm_status.get('generation', {}).get('model', '')}`")
+
         return "\n".join(lines)
 
     def serialize_turns(self) -> List[Dict[str, Any]]:
@@ -587,6 +776,11 @@ class VirtualChildRLSystem:
                 "deviation_level": turn.deviation_level,
                 "transition_used": turn.transition_used,
                 "extracted_slots": turn.extracted_slots,
+                "emotion_label": turn.emotion_label,
+                "emotion_intensity": round(turn.emotion_intensity, 3),
+                "llm_analysis_summary": turn.llm_analysis_summary,
+                "llm_concerns": turn.llm_concerns,
+                "generated_by_llm": turn.generated_by_llm,
             }
             for turn in self.session.turns
         ]
@@ -602,6 +796,9 @@ class VirtualChildRLSystem:
             "summary": self.build_summary_dict(),
             "summary_markdown": self.render_caregiver_summary(),
             "turns": self.serialize_turns(),
+            "latest_analysis": self.session.latest_analysis,
+            "llm_status": self.session.llm_status,
+            "available_model_presets": available_model_presets(),
         }
 
     def save_session(self, output_dir: Path | None = None) -> Dict[str, str]:
@@ -663,6 +860,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--policy-epochs", type=int, default=180)
     parser.add_argument("--policy-batch-size", type=int, default=16)
     parser.add_argument("--demo-file", type=Path, default=None, help="Optional JSON file with demo_messages array.")
+    parser.add_argument("--disable-llm", action="store_true", help="Disable hybrid LLM analysis/generation.")
+    parser.add_argument("--analysis-preset", default=DEFAULT_ANALYSIS_PRESET, choices=sorted(available_model_presets()))
+    parser.add_argument("--generation-preset", default=DEFAULT_GENERATION_PRESET, choices=sorted(available_model_presets()))
     return parser.parse_args()
 
 
@@ -685,6 +885,9 @@ def main() -> None:
         model_dir=args.model_dir,
         policy_epochs=args.policy_epochs,
         policy_batch_size=args.policy_batch_size,
+        llm_enabled=not args.disable_llm,
+        analysis_preset=args.analysis_preset,
+        generation_preset=args.generation_preset,
     )
 
     if args.mode == "interactive":
