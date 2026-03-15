@@ -1071,6 +1071,7 @@ class VirtualChildRLSystem:
                         pending_items=pending_items,
                         recent_turns=self._recent_turn_context(),
                         filled_slots=self.session.filled_slots,
+                        slot_value_details=self.session.slot_value_details,
                         regex_extracted=extracted_slots,
                         similarity_score=similarity,
                         rule_deviation=rule_deviation,

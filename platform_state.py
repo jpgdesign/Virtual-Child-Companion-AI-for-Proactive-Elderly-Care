@@ -19,10 +19,32 @@ from persona_profiles import DEFAULT_PERSONA_PROFILE_ID, PERSONA_PROFILES
 STATE_PATH = Path("artifacts/platform_state.json")
 
 
-DEFAULT_PROMPT_SETTINGS = {
+LEGACY_PROMPT_SETTINGS = {
     "analysis_appendix": "分析時要特別參考家庭關係畫像、長者個性與既有相處模式，不要只做一般客服式判讀。",
     "generation_appendix": "回覆必須像熟悉長者的兒女，不要像客服或醫院問卷。要先接話，再隱性引導。",
     "fused_appendix": "請保持兒女人設一致，優先延續家人原本的講話方式、稱呼與共同回憶。",
+}
+
+
+DEFAULT_PROMPT_SETTINGS = {
+    "analysis_appendix": (
+        "請優先理解長者此刻真正想表達的生活事件、情緒和照護線索。"
+        "填槽必須有語意依據，不能憑空補出數值、藥名、時間或症狀。"
+        "如果只是自然延伸聊天，不要過度判成高偏離。"
+        "concerns 只保留家屬真的需要留意的重點，summary 要寫成一看就懂的繁中短句。"
+    ),
+    "generation_appendix": (
+        "你不是客服、護理師或問卷系統，而是熟悉長者的兒女。"
+        "回覆要先接住對方剛說的內容與情緒，再用一句自然過橋慢慢帶到目標槽位。"
+        "避免連珠炮提問、避免教條式關心、避免直接說槽位名稱。"
+        "以 1 到 2 句為主，最多 1 個問題，語氣要像家人。"
+    ),
+    "fused_appendix": (
+        "請同時完成分析與生成，但以家庭感、自然感和連續性為最高優先。"
+        "若長者提到不舒服、擔心、疲累、睡不好、忘記、沒胃口，先安撫再引導。"
+        "若已有足夠資料，不要硬追問；若缺資料，就挑最自然的一個缺口輕輕問。"
+        "所有自然語句請用繁體中文，維持同一 persona、稱呼、共同回憶與說話習慣。"
+    ),
 }
 
 
@@ -123,13 +145,23 @@ def build_default_state() -> Dict[str, Any]:
     }
 
 
+def _merge_prompt_settings(saved_prompt_settings: Dict[str, Any] | None) -> Dict[str, Any]:
+    if not isinstance(saved_prompt_settings, dict):
+        return deepcopy(DEFAULT_PROMPT_SETTINGS)
+    if saved_prompt_settings == LEGACY_PROMPT_SETTINGS:
+        return deepcopy(DEFAULT_PROMPT_SETTINGS)
+    merged = deepcopy(DEFAULT_PROMPT_SETTINGS)
+    merged.update({key: str(value) for key, value in saved_prompt_settings.items()})
+    return merged
+
+
 def _merge_defaults(state: Dict[str, Any]) -> Dict[str, Any]:
     defaults = build_default_state()
     merged = defaults
     merged.update(state or {})
     merged["users"] = state.get("users", defaults["users"]) if isinstance(state, dict) else defaults["users"]
     merged["personas"] = state.get("personas", defaults["personas"]) if isinstance(state, dict) else defaults["personas"]
-    merged["prompt_settings"] = state.get("prompt_settings", defaults["prompt_settings"]) if isinstance(state, dict) else defaults["prompt_settings"]
+    merged["prompt_settings"] = _merge_prompt_settings(state.get("prompt_settings")) if isinstance(state, dict) else deepcopy(defaults["prompt_settings"])
     merged["api_settings"] = state.get("api_settings", defaults["api_settings"]) if isinstance(state, dict) else defaults["api_settings"]
     merged["conversation_records"] = state.get("conversation_records", defaults["conversation_records"]) if isinstance(state, dict) else defaults["conversation_records"]
     return merged

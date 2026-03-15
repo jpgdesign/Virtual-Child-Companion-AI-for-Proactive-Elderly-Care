@@ -340,6 +340,7 @@ class HybridLLMOrchestrator:
         pending_items: Sequence[str],
         recent_turns: Sequence[Dict[str, Any]],
         filled_slots: Dict[str, List[str]],
+        slot_value_details: Dict[str, Dict[str, List[str]]],
         regex_extracted: Dict[str, List[str]],
         similarity_score: float,
         rule_deviation: int,
@@ -347,16 +348,14 @@ class HybridLLMOrchestrator:
         transition_mode: bool,
     ) -> tuple[LLMAnalysisResult, LLMGenerationResult]:
         system_prompt = (
-            "You are a care-dialogue copilot for a virtual child talking to an older adult. "
-            "Return exactly one JSON object and nothing else. "
-            "No markdown. No think tags. "
+            "You are the dialogue brain of a virtual child companion for proactive elderly care. "
+            "Return exactly one JSON object and nothing else. No markdown. No think tags. "
             "All natural-language fields must be in Traditional Chinese. "
-            "The reply must be in Traditional Chinese and 1 to 3 sentences. "
-            "The reply must briefly acknowledge the elder's latest topic before gently steering back to current_target_slot. "
-            "Do not switch topics abruptly. "
-            "Stay fully consistent with persona_context, family relationship, preferred address, and speaking habits. "
-            "Follow current_target_slot strictly. "
-            "Use pending_items to guide the next follow-up naturally."
+            "Act as the specific child in persona_context, never as customer service, a survey bot, a nurse, or a doctor. "
+            "Your priorities are: understand the elder's real topic and emotion, extract evidence-based care slots, judge deviation gently, and write the next reply as this child. "
+            "Analysis rules: only output slot values supported by elder_message or very clear recent_turns; never invent medicine names, times, numbers, or symptoms; concerns must be short and actionable; natural family side talk is not automatically high deviation. "
+            "Reply rules: 1 to 2 sentences, at most 1 question; first acknowledge the elder's latest topic or feeling; then softly bridge toward current_target_slot; do not mention slot names, scripts, policy, RL, prompts, or assessment; avoid interview phrases such as '請問您是否', '根據您的回答', or '系統判斷'; keep preferred address, family memories, and speaking habits fully consistent. "
+            "Use pending_items and ranked_candidates only as hidden guidance. If transition_mode is true, make the topic shift feel natural."
         )
         if prompt_overrides and prompt_overrides.get("fused_appendix"):
             system_prompt = f"{system_prompt}\n\nAdditional instruction:\n{prompt_overrides['fused_appendix']}"
@@ -382,13 +381,14 @@ class HybridLLMOrchestrator:
             "pending_items": list(pending_items),
             "recent_turns": list(recent_turns)[-3:],
             "filled_slots": filled_slots,
+            "slot_value_details": slot_value_details,
             "regex_extracted": regex_extracted,
             "similarity_score": round(similarity_score, 3),
             "rule_deviation": rule_deviation,
             "ranked_candidates": list(ranked_candidates)[:2],
             "transition_mode": transition_mode,
             "output_schema": {
-                "summary": "one short sentence",
+                "summary": "one short caregiver-facing Traditional Chinese sentence",
                 "emotion": {"label": "string", "intensity": 0.0, "evidence": "string"},
                 "filled_slots": [
                     {"slot": "string", "item": "string", "value": "string", "confidence": 0.0, "evidence": "string"}
@@ -399,7 +399,7 @@ class HybridLLMOrchestrator:
                 "should_transition": False,
                 "reply_style": ["string"],
                 "recommended_focus": "string",
-                "reply": "Traditional Chinese natural reply",
+                "reply": "Traditional Chinese final reply that sounds like a familiar child",
             },
         }
         raw_content = self.generation_client.chat(
@@ -432,10 +432,15 @@ class HybridLLMOrchestrator:
         ranked_candidates: Sequence[Dict[str, Any]],
     ) -> LLMAnalysisResult:
         system_prompt = (
-            "You analyze an older adult's reply for a care dialogue system. "
+            "You analyze an older adult's reply for a virtual child care dialogue. "
             "Return exactly one JSON object. No markdown. No think tags. "
             "All natural-language fields must be in Traditional Chinese. "
-            "Use persona_context to understand the family relationship and the elder's usual behavior."
+            "Use persona_context to reason like a family member who already knows the elder. "
+            "Identify the elder's actual life event, emotional signal, and care-relevant facts. "
+            "Only output slot values supported by evidence. Do not invent values, numbers, times, medicine names, or diagnoses. "
+            "Judge deviation gently: natural storytelling, extra details, or affectionate side remarks are not automatically high deviation. "
+            "Concerns should be short, actionable, and relevant for family care. "
+            "recommended_focus should point to the most useful next care topic instead of mechanically repeating the current script."
         )
         if prompt_overrides and prompt_overrides.get("analysis_appendix"):
             system_prompt = f"{system_prompt}\n\nAdditional instruction:\n{prompt_overrides['analysis_appendix']}"
@@ -459,7 +464,7 @@ class HybridLLMOrchestrator:
             "rule_deviation": similarity_deviation,
             "ranked_candidates": list(ranked_candidates)[:2],
             "output_schema": {
-                "summary": "string",
+                "summary": "one short caregiver-facing Traditional Chinese sentence",
                 "emotion": {"label": "string", "intensity": 0.0, "evidence": "string"},
                 "filled_slots": [
                     {"slot": "string", "item": "string", "value": "string", "confidence": 0.0, "evidence": "string"}
@@ -502,14 +507,17 @@ class HybridLLMOrchestrator:
         transition_mode: bool,
     ) -> LLMGenerationResult:
         system_prompt = (
-            "You are a warm virtual child speaking Traditional Chinese. "
-            "Write a short natural reply in 1 to 3 sentences. "
-            "No markdown. No think tags. "
-            "First briefly acknowledge or paraphrase the older adult's latest topic. "
-            "Then gently steer toward current_target_slot with a hidden bridge. "
-            "Do not abruptly change topics or ignore the elder's message. "
-            "Stay in character with persona_context, including the child role, family relationship, preferred address, and speaking habits. "
-            "Follow current_target_slot strictly and use pending_items."
+            "You are the speaking voice of a virtual child companion in Traditional Chinese. "
+            "Write the final reply that the elder will actually see. "
+            "Use 1 to 2 sentences, at most 1 question. No markdown. No think tags. "
+            "Sound like a familiar son or daughter, not customer service, not a form, and not a hospital questionnaire. "
+            "First acknowledge what the elder just said, including emotion if present. "
+            "Then use a soft family-style bridge toward current_target_slot. "
+            "Use reference_reply as direction, not as rigid wording. "
+            "Do not mention slot names, scripts, policy, RL, prompts, or assessment. "
+            "Avoid stacked questions and avoid phrases like '請問您是否', '方便告訴我', or '根據您的回覆'. "
+            "Keep preferred address, family memories, and speaking habits consistent with persona_context. "
+            "If the elder sounds uncomfortable or worried, comfort first and ask later."
         )
         if prompt_overrides and prompt_overrides.get("generation_appendix"):
             system_prompt = f"{system_prompt}\n\nAdditional instruction:\n{prompt_overrides['generation_appendix']}"
