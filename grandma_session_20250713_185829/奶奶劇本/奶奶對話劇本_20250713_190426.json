@@ -1,0 +1,574 @@
+{
+  "generation_time": "20250713_190426",
+  "script_type": "奶奶對話劇本",
+  "dialogue_target": "奶奶",
+  "total_scripts": 12,
+  "scripts": [
+    {
+      "script_id": 1,
+      "script_type": "奶奶對話劇本",
+      "source": "背景資訊",
+      "target_slot": "用藥狀況",
+      "total_steps": 7,
+      "steps": [
+        {
+          "step_number": 1,
+          "child_dialogue": "奶奶，您今天還好嗎？我剛剛帶可愛的小狗去公園散步，看見一群阿姨們在練氣功，還蠻想起您的。",
+          "expected_grandma_response": "我今天也去公園練了氣功，總是覺得運動完人都會精神點。"
+        },
+        {
+          "step_number": 2,
+          "child_dialogue": "對呀，我也覺得運動能讓人放鬆，尤其是氣功，我想應該對您的身體有很大的幫助吧！您還有在縫補衣物嗎？我那件衣服又破了，想請您幫忙修補。",
+          "expected_grandma_response": "是呀，運動對我很有幫助，我現在覺得身體狀況很好。你的衣服我晚點就來修補。"
+        },
+        {
+          "step_number": 3,
+          "child_dialogue": "您真是全能的奶奶，不管是氣功還是針織都一手包辦。對了，我最近學了一種新的烘焙甜點，不過我知道您不能吃太甜的東西，我可以試試看做不加糖的給您嘗嘗看嗎？",
+          "expected_grandma_response": "你真體貼，我知道我不能吃太甜，所以我吃的東西都得控制一下。你做的甜點我很期待。"
+        },
+        {
+          "step_number": 4,
+          "child_dialogue": "我也很期待您的評價呢！我覺得好好照顧自己的飲食，身體就會更健康。像您每天都有特定的飲食習慣，不是嗎？",
+          "expected_grandma_response": "沒錯，我每天都會吃一些低糖、清淡的食物，有時還會喝一些降血糖的茶。"
+        },
+        {
+          "step_number": 5,
+          "child_dialogue": "您真的是保養的好榜樣，我也要向您學習。我想起來上次我們一起去廟宇參拜，您跟我說過那種信仰也能給您帶來平靜，是不是呢？",
+          "expected_grandma_response": "是的，我覺得心裡有信仰就會覺得比較安心，我每天早上運動完都會靜坐一下，順便監控一下身體狀況，確保一切都正常。"
+        },
+        {
+          "step_number": 6,
+          "child_dialogue": "真的嗎？奶奶您真的很會照顧自己，我覺得這樣的習慣很好，我也該學習一下。您是不是都會在某個時間段去運動或者靜坐呢？",
+          "expected_grandma_response": "嗯，我通常都是早上運動，然後吃完早餐後會坐一會兒。大概過個一、兩個小時，我就會吃我那一顆控制血糖的藥。"
+        },
+        {
+          "step_number": 7,
+          "child_dialogue": "原來如此，您的生活安排得很有規律。那您有沒有什麼特別的方式來確保自己不會忘記服藥呢？",
+          "expected_grandma_response": "我都會把藥放在餐桌上，每次吃完飯就會看到，這樣就不會忘記吃藥了。偶爾我還會量一下血壓，確保一切都在正常範圍內。"
+        }
+      ],
+      "target_info": [
+        "量血壓情況",
+        "服藥情況",
+        "身體不適",
+        "用藥時間"
+      ]
+    },
+    {
+      "script_id": 2,
+      "script_type": "奶奶對話劇本",
+      "source": "背景資訊",
+      "target_slot": "睡眠狀態",
+      "total_steps": 5,
+      "steps": [
+        {
+          "step_number": 1,
+          "child_dialogue": "奶奶，我今天在網路上看到一個好玩的夢境解析，說如果夢到自己在飛，那就代表近期心情會很好耶！你最近有做什麼特別的夢嗎？",
+          "expected_grandma_response": "噢，你說的有趣呢，我最近夢裡都是我在公園裡練氣功，可能是我每天都去練的關係吧。"
+        },
+        {
+          "step_number": 2,
+          "child_dialogue": "哈哈，那奶奶一定是練得很專心。我也該學學你，早早起床做運動。不過我一直都很難早起，你有什麼祕訣嗎？",
+          "expected_grandma_response": "我也沒什麼祕訣啦，我就是每天早上6點自然醒，然後就起來練氣功了。"
+        },
+        {
+          "step_number": 3,
+          "child_dialogue": "哇，奶奶你真的好有自律。我晚上看手機看太晚，早上就起不來。你晚上通常什麼時候休息呢？",
+          "expected_grandma_response": "我通常晚上10點就會上床準備睡覺了，看一會兒電視或者聽聽音樂就入睡了。"
+        },
+        {
+          "step_number": 4,
+          "child_dialogue": "聽音樂入睡，那很棒呢！我也試試看。不過奶奶，你有時候會不會午睡呢？我聽說午睡對身體也很好。",
+          "expected_grandma_response": "我偶爾會午睡一下，大概半小時吧，但並不是每天都會。"
+        },
+        {
+          "step_number": 5,
+          "child_dialogue": "我也該試試看午睡，可能可以改善我的晚睡習慣。奶奶，你覺得自己的睡眠品質如何呢？有足夠休息嗎？",
+          "expected_grandma_response": "我覺得我睡得還蠻好的，早上起來也都很精神，應該是有足夠休息吧。"
+        }
+      ],
+      "target_info": [
+        "起床時間",
+        "睡眠時間",
+        "小睡情況",
+        "睡眠品質"
+      ]
+    },
+    {
+      "script_id": 3,
+      "script_type": "奶奶對話劇本",
+      "source": "背景資訊",
+      "target_slot": "作息活動",
+      "total_steps": 6,
+      "steps": [
+        {
+          "step_number": 1,
+          "child_dialogue": "奶奶，你的縫紉技術真是棒極了！我那件破洞的襯衫穿起來就像新的一樣。你最近有縫補什麼新的衣物嗎？",
+          "expected_grandma_response": "噢，我最近正在修補你阿姨的毛衣。順便在家做做這個，也算是運動呢。"
+        },
+        {
+          "step_number": 2,
+          "child_dialogue": "看來奶奶你在家的時候一點也不會無聊呢。我昨天看到一個有趣的短影片，裡面的老太太每天都會做些小運動，像是在家裡做瑜珈、揮揮拳。奶奶你有沒有這樣的習慣呢？",
+          "expected_grandma_response": "我每天早上都會在社區公園練練氣功，回來後也會做做家事，算是運動吧。"
+        },
+        {
+          "step_number": 3,
+          "child_dialogue": "奶奶你真的很棒，能夠每天保持活動。我剛剛看到外面天氣很好，你有沒有計劃去公園散步或者去超市買菜呢？",
+          "expected_grandma_response": "天氣這麼好，我打算待會兒去公園走走，順便去超市看看有什麼新鮮的水果。"
+        },
+        {
+          "step_number": 4,
+          "child_dialogue": "那真是太棒了，外出走走可以享受新鮮空氣，還能接觸到大自然。我記得奶奶你以前說過，每次去公園，你都會在回家前去公共廁所，這樣子還是維持得很好嗎？",
+          "expected_grandma_response": "對呀，我都會在回家前去一趟公共廁所，這樣子回家後就可以輕鬆看我最愛的新聞了。"
+        },
+        {
+          "step_number": 5,
+          "child_dialogue": "真的很開心聽到奶奶你生活得這麼有規律。我看到一個健康小知識，說喝水也很重要，可以幫助身體排毒。奶奶你有特別注意喝水的習慣嗎？",
+          "expected_grandma_response": "我有時會忘記喝水，但大多數時候都會記得。一般我都會在運動後和看完新聞後喝一杯水。"
+        },
+        {
+          "step_number": 6,
+          "child_dialogue": "那真是太好了，我們都要記得多喝水。還有，奶奶，你平時洗澡的時候有沒有什麼特別的習慣呢？我看過一個節目，說對於我們這種年紀的人來說，洗澡的時候要特別小心，不要滑倒。",
+          "expected_grandma_response": "我洗澡的時候都會小心的，我有在浴室裡放一個椅子，可以邊洗邊坐，這樣就不會滑倒了。"
+        }
+      ],
+      "target_info": [
+        "上廁所情況",
+        "居家運動",
+        "外出情況",
+        "洗澡情況",
+        "喝水情況",
+        "看電視情況"
+      ]
+    },
+    {
+      "script_id": 4,
+      "script_type": "奶奶對話劇本",
+      "source": "背景資訊",
+      "target_slot": "飲食狀況",
+      "total_steps": 5,
+      "steps": [
+        {
+          "step_number": 1,
+          "child_dialogue": "奶奶，我最近在學做糖尿病友善的甜點，想要找你嚐嚐。你平常什麼時候比較方便呢？",
+          "expected_grandma_response": "那真是太好了，我的小寶貝。我一般早餐吃完後會去公園練氣功，回來後就是我最放鬆的時間。"
+        },
+        {
+          "step_number": 2,
+          "child_dialogue": "那我就找個早上來找你。對了，奶奶你平常早餐都喜歡吃些什麼呢？",
+          "expected_grandma_response": "我早餐通常都會吃一碗燕麥粥，配上一些新鮮的水果。"
+        },
+        {
+          "step_number": 3,
+          "child_dialogue": "聽起來很健康呢！奶奶你一定是個廚藝高手，自己做早餐一定不在話下吧？",
+          "expected_grandma_response": "咳咳，你這孩子，嘴真甜。我也就是煮點燕麥粥，切切水果，簡單的事情還是可以做的。"
+        },
+        {
+          "step_number": 4,
+          "child_dialogue": "奶奶真的很厲害！那你平常都喜歡在哪裡買食材呢？",
+          "expected_grandma_response": "我通常都會在附近的菜市場買，新鮮又便宜。有時候回來太晚，就會先把水果放進冰箱。"
+        },
+        {
+          "step_number": 5,
+          "child_dialogue": "我記得奶奶你的冰箱一直都很整齊，那我下次來的時候，也會把甜點放進冰箱，這樣可以保鮮。",
+          "expected_grandma_response": "那就太好了，我一直想吃你做的甜點。你看，我這個冰箱，早就為你的甜點騰出位置了呢。"
+        }
+      ],
+      "target_info": [
+        "三餐時間",
+        "食物內容",
+        "廚房使用",
+        "冰箱使用"
+      ]
+    },
+    {
+      "script_id": 5,
+      "script_type": "奶奶對話劇本",
+      "source": "喜好興趣",
+      "target_slot": "用藥狀況",
+      "total_steps": 6,
+      "steps": [
+        {
+          "step_number": 1,
+          "child_dialogue": "奶奶，你最近還在早上去練氣功嗎？我記得你說過那對你的血糖控制很有幫助呢。",
+          "expected_grandma_response": "對呀，我還是堅持每天早上去練習，感覺身體比較有活力，也有助於血糖的控制。"
+        },
+        {
+          "step_number": 2,
+          "child_dialogue": "真是太棒了，奶奶你的毅力和堅持讓我很敬佩。對了，我昨天在網路上看到一個很好的拉筋運動，對腰部很有幫助，你想試試看嗎？",
+          "expected_grandma_response": "哦，那我可以試試看。我通常會在做完氣功後，做一些拉筋運動，有時候腰部會有點不舒服，可能是以前傷過的關係。"
+        },
+        {
+          "step_number": 3,
+          "child_dialogue": "嗯嗯，那我這幾天就來教你那個拉筋運動，希望能對你的腰部有所幫助。對了，奶奶，你的用藥和健康檢查還是由醫生規定的週期進行嗎？",
+          "expected_grandma_response": "是的，我還是按照醫生的建議，定期去做檢查和用藥。"
+        },
+        {
+          "step_number": 4,
+          "child_dialogue": "那真是太好了，奶奶你真的很棒，一直都很注重健康。那你每天都按時服用醫生開的藥物，沒有遺漏嗎？",
+          "expected_grandma_response": "對，我每天都會按時服藥。我知道這對我身體的健康很重要，所以我很注意。"
+        },
+        {
+          "step_number": 5,
+          "child_dialogue": "奶奶，你真是我學習的榜樣，總是那麼有紀律。你有時候會覺得身體不舒服，或者是服藥後有什麼不適嗎？",
+          "expected_grandma_response": "有時候服藥後我會覺得有點頭暈，但是我會注意休息，一般很快就會恢復。"
+        },
+        {
+          "step_number": 6,
+          "child_dialogue": "那真是太好了，奶奶你真的很理智，知道如何照顧自己。那你還有定期量血壓嗎？我記得以前你會每天早晚各量一次。",
+          "expected_grandma_response": "是的，我還是有每天量血壓的習慣，這樣我可以及時知道自己的身體狀況。"
+        }
+      ],
+      "target_info": [
+        "量血壓情況",
+        "服藥情況",
+        "身體不適",
+        "用藥時間"
+      ]
+    },
+    {
+      "script_id": 6,
+      "script_type": "奶奶對話劇本",
+      "source": "喜好興趣",
+      "target_slot": "睡眠狀態",
+      "total_steps": 6,
+      "steps": [
+        {
+          "step_number": 1,
+          "child_dialogue": "奶奶，我看到你在Instagram上的照片，你在陽台上的蘭花又開花了，真是太美了！",
+          "expected_grandma_response": "是呀，我每天早上都會去陽台照顧它們，看到它們繁花似錦，我就覺得很開心。"
+        },
+        {
+          "step_number": 2,
+          "child_dialogue": "看到你這麼快樂，我也覺得很開心。早上陽光灑在花朵上，應該很美吧！",
+          "expected_grandma_response": "真的，早上的陽光最好，我通常都會早起來，看著陽光照在花朵上，感覺很舒服。"
+        },
+        {
+          "step_number": 3,
+          "child_dialogue": "聽你這麼說，我都想早起來感受一下早晨的陽光和新鮮空氣了。我猜你大概是早上六點就起床了吧？",
+          "expected_grandma_response": "差不多，我通常都會在五點半到六點之間起床。"
+        },
+        {
+          "step_number": 4,
+          "child_dialogue": "真是佩服奶奶你，我大多時候都要八點才能起床。奶奶你平常晚上都幾點睡覺呢？",
+          "expected_grandma_response": "我晚上大概九點半就上床睡覺了，看一會兒電視就睡著了。"
+        },
+        {
+          "step_number": 5,
+          "child_dialogue": "九點半，那奶奶你大概可以睡足八個小時的時間。有時候下午會覺得累，需要小睡一下嗎？",
+          "expected_grandma_response": "我偶爾會在下午休息一下，但大多數時間都是去公園散步或者在家照顧我的花草。"
+        },
+        {
+          "step_number": 6,
+          "child_dialogue": "聽起來奶奶你的生活很規律，我學習了。那奶奶你晚上睡覺的品質怎麼樣？會翻來覆去難以入睡嗎？",
+          "expected_grandma_response": "我晚上睡得還不錯，一般都可以很快就入睡。"
+        }
+      ],
+      "target_info": [
+        "起床時間",
+        "睡眠時間",
+        "小睡情況",
+        "睡眠品質"
+      ]
+    },
+    {
+      "script_id": 7,
+      "script_type": "奶奶對話劇本",
+      "source": "喜好興趣",
+      "target_slot": "作息活動",
+      "total_steps": 10,
+      "steps": [
+        {
+          "step_number": 1,
+          "child_dialogue": "奶奶，我昨天看到你在陽台照顧那些植物，看起來好像你照顧的很愉快喔！",
+          "expected_grandma_response": "對呀，我真的很喜歡照顧植物，它們長得好我就開心。你有看到我最新栽種的小蘭花嗎？"
+        },
+        {
+          "step_number": 2,
+          "child_dialogue": "是啊，我看到了，那些蘭花長得真漂亮！奶奶，你每天都會在陽台花多少時間呢？",
+          "expected_grandma_response": "大概一兩個小時吧，我也會順便做做伸展運動，透透氣。"
+        },
+        {
+          "step_number": 3,
+          "child_dialogue": "這樣真好，與大自然親近一定很舒壓吧！奶奶，你還有其他的運動習慣嗎，比如散步或者氣功？",
+          "expected_grandma_response": "對呀，我每天早上都會去河邊公園散步或練練氣功，這樣身體會比較舒服。"
+        },
+        {
+          "step_number": 4,
+          "child_dialogue": "真的是超健康的生活習慣呢！奶奶，你一般是怎麼安排一天的活動的呢？",
+          "expected_grandma_response": "我一般早上起來先去公園，然後回來照顧我的花花草草，午餐後就看會兒電視，下午時我會再到陽台看看植物，晚上就早點休息。"
+        },
+        {
+          "step_number": 5,
+          "child_dialogue": "奶奶，你看電視的時候喝水多嗎？我聽說喝水也很重要，可以幫助身體排毒。",
+          "expected_grandma_response": "我知道的，所以我會保持每天都有喝足夠的水，看電視的時候我會特別注意。"
+        },
+        {
+          "step_number": 6,
+          "child_dialogue": "奶奶，你最喜歡看什麼節目呢？是不是傳統戲曲或者新聞呢？",
+          "expected_grandma_response": "沒錯，我喜歡看歌仔戲和新聞，還有一些健康節目，可以學到很多保健的知識。"
+        },
+        {
+          "step_number": 7,
+          "child_dialogue": "那真是太好了，奶奶你一定很關心自己的健康。對了，你最近有沒有嘗試新的食譜或者特色小吃呢？",
+          "expected_grandma_response": "有呀，上個星期我和你阿姨去夜市吃了一些特色小吃，但是我還是更喜歡自己做的低糖豆花，健康又好吃。"
+        },
+        {
+          "step_number": 8,
+          "child_dialogue": "奶奶，你真的太厲害了！你自己做的低糖豆花我也超級愛吃的。那你平常洗澡的時候，需要我們幫忙嗎？",
+          "expected_grandma_response": "不用，我自己可以搞定，只是有時腰會有點痠，我就會泡個熱水澡舒緩一下。"
+        },
+        {
+          "step_number": 9,
+          "child_dialogue": "我明白了，如果有需要的話一定要告訴我們哦，我們可以一起找出更好的方式來舒緩腰痠。奶奶，你晚上睡覺前會不會去上廁所呢？",
+          "expected_grandma_response": "我都會的，睡覺前上個廁所，這樣晚上就不用起來了。"
+        },
+        {
+          "step_number": 10,
+          "child_dialogue": "真的是非常棒的生活習慣，奶奶你真的是我們的學習榜樣。我們一起努力保持健康的生活方式，好讓我們都能擁有更好的生活品質。",
+          "expected_grandma_response": "對呀，我們都要好好照顧自己，這樣才能享受生活呢！"
+        }
+      ],
+      "target_info": [
+        "上廁所情況",
+        "居家運動",
+        "外出情況",
+        "洗澡情況",
+        "喝水情況",
+        "看電視情況"
+      ]
+    },
+    {
+      "script_id": 8,
+      "script_type": "奶奶對話劇本",
+      "source": "喜好興趣",
+      "target_slot": "飲食狀況",
+      "total_steps": 7,
+      "steps": [
+        {
+          "step_number": 1,
+          "child_dialogue": "奶奶，你今天早上有去練氣功嗎？我記得你說過那對你的身心狀態有很大的幫助。",
+          "expected_grandma_response": "有阿，今天早上天氣真好，我就去公園練了一下氣功。回來後就吃了早餐。"
+        },
+        {
+          "step_number": 2,
+          "child_dialogue": "那聽起來你的一天開始得很棒呀。你早餐都喜歡吃些什麼呢？",
+          "expected_grandma_response": "我通常吃一點燕麥粥和一些水果，有時候會加一點豆漿。"
+        },
+        {
+          "step_number": 3,
+          "child_dialogue": "哇，你的早餐真健康，我也該學學你。那午餐和晚餐呢，你通常都吃些什麼呢？",
+          "expected_grandma_response": "午餐我通常吃點蔬菜和肉，晚餐我會吃得輕一點，像是湯或是炒菜。"
+        },
+        {
+          "step_number": 4,
+          "child_dialogue": "你的飲食習慣真的好健康，我也應該向你學習。那你自己做飯還是都是我媽媽幫你準備的呢？",
+          "expected_grandma_response": "我大部分的時候都是自己做，不過你媽媽有時候也會過來幫忙。"
+        },
+        {
+          "step_number": 5,
+          "child_dialogue": "那你在廚房做飯的時候有沒有什麼需要注意的地方呢？比如說，你會怎麼確保食材的新鮮度呢？",
+          "expected_grandma_response": "我通常都會把食材放在冰箱裡，每次做飯前我都會檢查一下，確保食材都還新鮮。"
+        },
+        {
+          "step_number": 6,
+          "child_dialogue": "你真的很謹慎呢，奶奶。那你平常都會怎麼安排你的飲食時間呢？",
+          "expected_grandma_response": "我早上七點吃早餐，中午十二點吃午餐，晚上五點吃晚餐。我覺得按時吃飯對身體很好。"
+        },
+        {
+          "step_number": 7,
+          "child_dialogue": "你的生活規律真的好健康，奶奶。我也該學習你這種良好的生活習慣。那你有沒有什麼特別的飲食習慣或是飲食上的秘訣呢？",
+          "expected_grandma_response": "我覺得飲食最重要的就是要均衡，吃得太少或吃得太多都不好。而且我都會盡量選擇新鮮的食材，避免吃太多加工食品。"
+        }
+      ],
+      "target_info": [
+        "三餐時間",
+        "食物內容",
+        "廚房使用",
+        "冰箱使用"
+      ]
+    },
+    {
+      "script_id": 9,
+      "script_type": "奶奶對話劇本",
+      "source": "作息",
+      "target_slot": "用藥狀況",
+      "total_steps": 6,
+      "steps": [
+        {
+          "step_number": 1,
+          "child_dialogue": "奶奶，我看到您的作息表，發現您每天早上都會做氣功運動，真是健康的好習慣呢！",
+          "expected_grandma_response": "沒辦法啊，醫生囑咐的，為了身體健康，我每天都會堅持做一下。"
+        },
+        {
+          "step_number": 2,
+          "child_dialogue": "奶奶，您每天都會自己煮早餐，還會測血糖，這麼講究，我也應該向您學習。您早餐都喜歡吃些什麼呢？",
+          "expected_grandma_response": "我就煮些燕麥粥，加點核桃和綜合營養粉，然後配上一杯熱豆漿。吃完後，就測一下血糖。"
+        },
+        {
+          "step_number": 3,
+          "child_dialogue": "奶奶，您自己的衣物都會縫補，真是手藝好。我記得您以前也都會為我縫補，還教我怎麼做，真的很謝謝您。",
+          "expected_grandma_response": "別這麼說，其實我也是為了消磨時間，而且這也是一種練習手眼協調的方式。"
+        },
+        {
+          "step_number": 4,
+          "child_dialogue": "我看您下午都會和鄰居聊天，那您們都會聊些什麼呢？是不是有些新聞時事也會討論呢？",
+          "expected_grandma_response": "有時候會聊聊天氣，有時候會討論一下新聞，還有一些健康的話題，像是怎麼調整作息，怎麼吃藥這些。"
+        },
+        {
+          "step_number": 5,
+          "child_dialogue": "奶奶，看您作息那麼有規律，定時休息，定時吃飯，那您的藥有沒有特別的吃法呢？像是需要空腹吃或者是飯後吃？",
+          "expected_grandma_response": "我每天都會在早餐後和晚餐後各吃一次，還會配上我的營養品。然後我都會記錄下來，看有沒有什麼不適。"
+        },
+        {
+          "step_number": 6,
+          "child_dialogue": "您真的很注意身體的狀況呢，奶奶，那您有時候會不會覺得身體哪裡不舒服呢？例如說頭痛背痛或是覺得心跳加速之類的？",
+          "expected_grandma_response": "有時候會覺得背有點痛，可能是以前工作的關係，但是我都會做一下氣功運動，然後量一下血壓，看有沒有異常。"
+        }
+      ],
+      "target_info": [
+        "量血壓情況",
+        "服藥情況",
+        "身體不適",
+        "用藥時間"
+      ]
+    },
+    {
+      "script_id": 10,
+      "script_type": "奶奶對話劇本",
+      "source": "作息",
+      "target_slot": "睡眠狀態",
+      "total_steps": 7,
+      "steps": [
+        {
+          "step_number": 1,
+          "child_dialogue": "奶奶，你最近還是堅持每天早上做氣功運動嗎？聽說那對身體很好呢。",
+          "expected_grandma_response": "是啊，我每天都會早早起床做氣功，感覺身體也有精神多了。"
+        },
+        {
+          "step_number": 2,
+          "child_dialogue": "真是太棒了！早早起床的人，晚上一定也早早休息吧。看那些八點檔時會不會有點困困的呢？",
+          "expected_grandma_response": "我一般都會在看完八點檔之後就去睡覺，大概就是十點左右。"
+        },
+        {
+          "step_number": 3,
+          "child_dialogue": "那你晚上睡覺的時候，會不會半夜醒來，或者是做夢呢？我有時候壓力大就會做夢，醒來都覺得好累。",
+          "expected_grandma_response": "我有時候會做夢，但大多時候都能一覺到天亮，不會半夜醒來。"
+        },
+        {
+          "step_number": 4,
+          "child_dialogue": "那真是太好了，我聽說一覺到天亮的睡眠質量才是最好的。那你會覺得自己的睡眠質量怎麼樣呢？",
+          "expected_grandma_response": "我感覺還不錯，每天早上起來都覺得精神充沛。"
+        },
+        {
+          "step_number": 5,
+          "child_dialogue": "奶奶，你真是個健康的榜樣！我也想像你一樣，每天都有好好的睡眠。那你在午休的時候，會不會小睡一下呢？",
+          "expected_grandma_response": "午休我一般就休息一下，偶爾有點困的話也會小睡一下。"
+        },
+        {
+          "step_number": 6,
+          "child_dialogue": "聽起來你的作息真的很規律，這樣的生活真是令人羨慕。那你覺得自己每天大概需要睡多久才能睡夠呢？",
+          "expected_grandma_response": "我覺得大概八個小時左右就差不多了，太多也睡不著。"
+        },
+        {
+          "step_number": 7,
+          "child_dialogue": "真的是，睡得過多反而會覺得更累。奶奶，你真的很懂得照顧自己的身體，我學到了很多。謝謝你和我分享你的生活。",
+          "expected_grandma_response": "你也要注意身體健康啊，有空多來我這裡坐坐，我也很喜歡和你聊天。"
+        }
+      ],
+      "target_info": [
+        "起床時間",
+        "睡眠時間",
+        "小睡情況",
+        "睡眠品質"
+      ]
+    },
+    {
+      "script_id": 11,
+      "script_type": "奶奶對話劇本",
+      "source": "作息",
+      "target_slot": "作息活動",
+      "total_steps": 5,
+      "steps": [
+        {
+          "step_number": 1,
+          "child_dialogue": "奶奶，聽說你最近很喜歡早上做氣功運動，感覺如何呢？有沒有什麼特別的感受？",
+          "expected_grandma_response": "哎呀，我覺得那氣功運動真的對我有幫助，早上做完感覺一整天都精神。我也會記得去上廁所，不然做運動會不舒服。"
+        },
+        {
+          "step_number": 2,
+          "child_dialogue": "那真是太棒了，奶奶！我看你也有跟鄰居聊天和散步的習慣，你們都會去哪裡散步呢？",
+          "expected_grandma_response": "我們就在社區公園附近走走，有時候也會去附近的市場。回來後我都會去洗個澡，覺得很舒服。"
+        },
+        {
+          "step_number": 3,
+          "child_dialogue": "聽起來真好，我也想跟你們一起去。那奶奶，你在家的時候，喜歡喝什麼呢？我下次來的時候帶給你。",
+          "expected_grandma_response": "我就喝白開水，有時候也會泡點菊花茶消消暑。你知道我老是忘記喝水，有茶喝就會想起來。"
+        },
+        {
+          "step_number": 4,
+          "child_dialogue": "好的，我知道了。那奶奶你晚上有什麼娛樂活動嗎？我記得你以前很喜歡看八點檔。",
+          "expected_grandma_response": "哎呀，我現在還是喜歡看八點檔，特別是包青天，我都會看一兩個小時，然後就去睡覺了。"
+        },
+        {
+          "step_number": 5,
+          "child_dialogue": "我也喜歡包青天呢，下次我來的時候，我們一起看。那奶奶，晚上你睡得好嗎？有沒有做什麼特別的事情讓自己睡得更好？",
+          "expected_grandma_response": "我睡得還不錯，看完電視我就會去洗澡，然後喝一杯熱水，這樣我就能安安靜靜的睡一個好覺。"
+        }
+      ],
+      "target_info": [
+        "上廁所情況",
+        "居家運動",
+        "外出情況",
+        "洗澡情況",
+        "喝水情況",
+        "看電視情況"
+      ]
+    },
+    {
+      "script_id": 12,
+      "script_type": "奶奶對話劇本",
+      "source": "作息",
+      "target_slot": "飲食狀況",
+      "total_steps": 6,
+      "steps": [
+        {
+          "step_number": 1,
+          "child_dialogue": "奶奶，我剛看完一部很好看的電視劇，劇中的主角是一位手藝非常好的大廚，他做的菜看起來都好好吃。你猜我現在最想吃什麼呢？",
+          "expected_grandma_response": "是我炒的蛋餅嗎？我記得你以前特別喜歡。"
+        },
+        {
+          "step_number": 2,
+          "child_dialogue": "對啊！就是你的手藝我最愛。那您最近還有自己下廚嗎？是不是也在做我們以前常吃的那些菜？",
+          "expected_grandma_response": "是的，我還是覺得自己做的飯菜最放心，我早上會煮些粥，中晚餐就做些蔬菜肉片，簡單清淡。"
+        },
+        {
+          "step_number": 3,
+          "child_dialogue": "真的很佩服奶奶，這麼大年紀還堅持自己下廚。那您一般是什麼時候開始做菜的呢？",
+          "expected_grandma_response": "我一般早上七點多吃完早餐後，就開始準備午餐的材料，午餐大概在11點左右做，晚餐則是傍晚五點左右。"
+        },
+        {
+          "step_number": 4,
+          "child_dialogue": "奶奶真是個勤快的人。那您煮飯時，會不會用到冰箱裡的食材呢？",
+          "expected_grandma_response": "當然會呀，我會把剩下的蔬菜肉類放在冰箱裡，需要的時候再拿出來煮。"
+        },
+        {
+          "step_number": 5,
+          "child_dialogue": "真是一個經濟又實惠的好習慣。那奶奶，你一天大概有幾次會去開冰箱呢？",
+          "expected_grandma_response": "大概三次吧，早餐、午餐和晚餐我都會用到冰箱裡的食材。"
+        },
+        {
+          "step_number": 6,
+          "child_dialogue": "看來奶奶真的是個資深的廚娘。那您在做菜的時候，有沒有什麼特別的習慣或者小技巧呢？",
+          "expected_grandma_response": "我總是會在炒菜前先把所有的食材洗好切好，這樣炒菜的時候就可以一心一意的照顧好火候，讓菜色菜香都恰到好處。"
+        }
+      ],
+      "target_info": [
+        "三餐時間",
+        "食物內容",
+        "廚房使用",
+        "冰箱使用"
+      ]
+    }
+  ]
+}

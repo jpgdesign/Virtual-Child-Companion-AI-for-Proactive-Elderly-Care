@@ -1,0 +1,7 @@
+numpy
+pandas
+torch
+sentence-transformers
+openai
+jsonlines
+python-docx

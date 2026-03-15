@@ -1,0 +1,126 @@
+{
+  "project_root": "C:\\Users\\15507\\Desktop\\老人",
+  "syntax_checks": {
+    "dialogue_simulator.py": {
+      "status": "pass"
+    },
+    "integrated_dqn_train.py": {
+      "status": "pass"
+    },
+    "R_data.py": {
+      "status": "pass"
+    },
+    "script_generator.py": {
+      "status": "pass"
+    }
+  },
+  "required_packages": {
+    "numpy": {
+      "installed": true
+    },
+    "torch": {
+      "installed": true
+    },
+    "sentence_transformers": {
+      "installed": true
+    },
+    "pandas": {
+      "installed": true
+    }
+  },
+  "optional_packages": {
+    "openai": {
+      "installed": false
+    },
+    "jsonlines": {
+      "installed": false
+    },
+    "docx": {
+      "installed": false
+    }
+  },
+  "local_modules": {
+    "dueling_dqn.py": {
+      "present": false
+    },
+    "data_preprocessor.py": {
+      "present": false
+    },
+    "visualize_matrices.py": {
+      "present": false
+    },
+    "f1_evaluator.py": {
+      "present": false
+    }
+  },
+  "reference_status": {
+    "path": "C:\\Users\\15507\\Desktop\\老人\\專案說明",
+    "exists": true,
+    "file_count": 0
+  },
+  "sample_files": {
+    "session_dir_exists": true,
+    "script_json_candidates": [
+      "grandma_session_20250713_185829\\progress.json",
+      "grandma_session_20250713_185829\\奶奶劇本\\奶奶對話劇本_20250713_190426.json",
+      "grandma_session_20250713_185829\\grandma_session_summary_20250713_190426.json"
+    ],
+    "dialogue_json_exists": true,
+    "rl_json_exists": true
+  },
+  "sample_outputs": {
+    "script_total": 12,
+    "source_count": 3,
+    "target_slot_count": 4,
+    "avg_steps_per_script": 6.33,
+    "min_steps_per_script": 5,
+    "max_steps_per_script": 10,
+    "sample_dialogue_turns": 59,
+    "avg_similarity": 0.5827,
+    "avg_deviation": 1.2034,
+    "transition_scripts_used": 10,
+    "filled_slot_counts": {
+      "作息活動": 4,
+      "用藥狀況": 6,
+      "睡眠狀態": 4,
+      "飲食狀況": 5
+    },
+    "rl_records": 59,
+    "deviation_counts": {
+      "0": 29,
+      "1": 5,
+      "2": 9,
+      "3": 16
+    },
+    "transition_turns": 27,
+    "high_deviation_threshold": 2,
+    "deviation_thresholds": {
+      "0": 0.7,
+      "1": 0.5,
+      "2": 0.3,
+      "3": 0.0
+    }
+  },
+  "secret_scan": {
+    "count": 0,
+    "findings": []
+  },
+  "summary": {
+    "readiness": "partial",
+    "compile_failures": [],
+    "required_missing": [],
+    "optional_missing": [
+      "openai",
+      "jsonlines",
+      "docx"
+    ],
+    "local_missing": [
+      "dueling_dqn.py",
+      "data_preprocessor.py",
+      "visualize_matrices.py",
+      "f1_evaluator.py"
+    ],
+    "reference_dir_empty": true,
+    "secrets_found": 0
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "session_timestamp": "20250713_190426",
+  "dialogue_target": "奶奶",
+  "session_folder": "outputs/scripts\\grandma_session_20250713_185829",
+  "scripts": {
+    "count": 12,
+    "file_path": "outputs/scripts\\grandma_session_20250713_185829\\奶奶劇本\\奶奶對話劇本_20250713_190426.json"
+  },
+  "total_scripts": 12,
+  "sources": [
+    "喜好興趣",
+    "背景資訊",
+    "作息"
+  ],
+  "target_slots": [
+    "飲食狀況",
+    "睡眠狀態",
+    "用藥狀況",
+    "作息活動"
+  ]
+}

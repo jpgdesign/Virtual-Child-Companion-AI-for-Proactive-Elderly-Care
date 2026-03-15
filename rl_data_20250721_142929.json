@@ -1,0 +1,3109 @@
+{
+  "timestamp": "20250721_142929",
+  "total_turns": 59,
+  "state_action_data": [
+    {
+      "turn": 1,
+      "state": [
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "action": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 1,
+        "deviation_level": 0,
+        "distance_improvement": 0,
+        "is_terminal": false,
+        "total_turns": 1,
+        "average_deviation": 0.0
+      },
+      "next_state": [
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "script_info": {
+        "script_id": 11,
+        "script_type": "奶奶對話劇本",
+        "target_slot": "作息活動",
+        "source": "作息",
+        "is_transition_script": false
+      },
+      "dialogue_info": {
+        "expected_response": "哎呀，我覺得那氣功運動真的對我有幫助，早上做完感覺一整天都精神。我也會記得去上廁所，不然做運動會不舒服。",
+        "actual_response": "對呀，我發現那氣功運動對我真的很有幫助，每天早上做完後感覺整個人都精神百倍。而且我也會記得要去上廁所，不然做運動時會感覺不太舒服呢。",
+        "similarity": 0.9676896333694458,
+        "deviation_description": "相似"
+      }
+    },
+    {
+      "turn": 2,
+      "state": [
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "action": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 1,
+        "deviation_level": 0,
+        "distance_improvement": 0.20000000000000007,
+        "is_terminal": false,
+        "total_turns": 2,
+        "average_deviation": 0.0
+      },
+      "next_state": [
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "script_info": {
+        "script_id": 11,
+        "script_type": "奶奶對話劇本",
+        "target_slot": "作息活動",
+        "source": "作息",
+        "is_transition_script": false
+      },
+      "dialogue_info": {
+        "expected_response": "我們就在社區公園附近走走，有時候也會去附近的市場。回來後我都會去洗個澡，覺得很舒服。",
+        "actual_response": "我們常常在社區公園散步，有時候也會去逛逛市場。回家後我都會洗個澡，感覺真的很舒服。",
+        "similarity": 0.9724255800247192,
+        "deviation_description": "相似"
+      }
+    },
+    {
+      "turn": 3,
+      "state": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "action": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 0,
+        "deviation_level": 1,
+        "distance_improvement": 0.19999999999999996,
+        "is_terminal": false,
+        "total_turns": 3,
+        "average_deviation": 0.3333333333333333
+      },
+      "next_state": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "script_info": {
+        "script_id": 11,
+        "script_type": "奶奶對話劇本",
+        "target_slot": "作息活動",
+        "source": "作息",
+        "is_transition_script": false
+      },
+      "dialogue_info": {
+        "expected_response": "我就喝白開水，有時候也會泡點菊花茶消消暑。你知道我老是忘記喝水，有茶喝就會想起來。",
+        "actual_response": "我覺得菊花茶很苦，我更喜歡喝綠茶，對身體也好。而且我每天都會吃一片巧克力，覺得心情也變得很好。",
+        "similarity": 0.6473530530929565,
+        "deviation_description": "輕微偏離"
+      }
+    },
+    {
+      "turn": 4,
+      "state": [
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "action": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 1,
+        "deviation_level": 0,
+        "distance_improvement": 0.2,
+        "is_terminal": false,
+        "total_turns": 4,
+        "average_deviation": 0.25
+      },
+      "next_state": [
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "script_info": {
+        "script_id": 11,
+        "script_type": "奶奶對話劇本",
+        "target_slot": "作息活動",
+        "source": "作息",
+        "is_transition_script": false
+      },
+      "dialogue_info": {
+        "expected_response": "哎呀，我現在還是喜歡看八點檔，特別是包青天，我都會看一兩個小時，然後就去睡覺了。",
+        "actual_response": "噢，我現在還是喜歡看八點檔，特別是包青天，我看完後還會跟鄰居討論劇情，然後就去睡覺了。",
+        "similarity": 0.8410218954086304,
+        "deviation_description": "相似"
+      }
+    },
+    {
+      "turn": 5,
+      "state": [
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "action": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 0,
+        "deviation_level": 2,
+        "distance_improvement": 0.2,
+        "is_terminal": false,
+        "total_turns": 5,
+        "average_deviation": 0.6
+      },
+      "next_state": [
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "script_info": {
+        "script_id": 11,
+        "script_type": "奶奶對話劇本",
+        "target_slot": "作息活動",
+        "source": "作息",
+        "is_transition_script": false
+      },
+      "dialogue_info": {
+        "expected_response": "我睡得還不錯，看完電視我就會去洗澡，然後喝一杯熱水，這樣我就能安安靜靜的睡一個好覺。",
+        "actual_response": "我晚上總是喜歡在家中聞鞋子的氣味，然後再把它們一對一對排好，這樣我就能很滿足地上床睡覺了。",
+        "similarity": 0.4150887429714203,
+        "deviation_description": "明顯偏離"
+      }
+    },
+    {
+      "turn": 6,
+      "state": [
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "action": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 0,
+        "deviation_level": 3,
+        "distance_improvement": 0,
+        "is_terminal": false,
+        "total_turns": 6,
+        "average_deviation": 1.0
+      },
+      "next_state": [
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "script_info": {
+        "script_id": 5,
+        "script_type": "備用過渡劇本",
+        "target_slot": "用藥狀況",
+        "source": "老人可能作息",
+        "is_transition_script": true
+      },
+      "dialogue_info": {
+        "expected_response": "是啊，和你聊天我總是很高興。",
+        "actual_response": "哦，不好意思孩子，我想我正在注意到一隻迷人的小松鼠從窗戶外面跳來跳去，真是可愛極了。",
+        "similarity": 0.13274331390857697,
+        "deviation_description": "嚴重偏離"
+      }
+    },
+    {
+      "turn": 7,
+      "state": [
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "action": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 0,
+        "deviation_level": 3,
+        "distance_improvement": 0,
+        "is_terminal": false,
+        "total_turns": 7,
+        "average_deviation": 1.2857142857142858
+      },
+      "next_state": [
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "script_info": {
+        "script_id": 5,
+        "script_type": "備用過渡劇本",
+        "target_slot": "用藥狀況",
+        "source": "老人可能作息",
+        "is_transition_script": true
+      },
+      "dialogue_info": {
+        "expected_response": "謝謝你的關心，我都還好。",
+        "actual_response": "抱歉孩子，我記得七萬古有一株紅杉樹，直上天空，擁有不朽的力量。",
+        "similarity": 0.0878325030207634,
+        "deviation_description": "嚴重偏離"
+      }
+    },
+    {
+      "turn": 8,
+      "state": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "action": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 0,
+        "deviation_level": 0,
+        "distance_improvement": 0.4642857142857143,
+        "is_terminal": false,
+        "total_turns": 8,
+        "average_deviation": 1.125
+      },
+      "next_state": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "script_info": {
+        "script_id": 5,
+        "script_type": "奶奶對話劇本",
+        "target_slot": "用藥狀況",
+        "source": "喜好興趣",
+        "is_transition_script": false
+      },
+      "dialogue_info": {
+        "expected_response": "對呀，我還是堅持每天早上去練習，感覺身體比較有活力，也有助於血糖的控制。",
+        "actual_response": "對呀，我還是堅持每天早上去練習，感覺身體比較有活力，也有助於我那隻頑皮的小貓咪更有精神。",
+        "similarity": 0.7717170715332031,
+        "deviation_description": "相似"
+      }
+    },
+    {
+      "turn": 9,
+      "state": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "action": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 0,
+        "deviation_level": 1,
+        "distance_improvement": 0,
+        "is_terminal": false,
+        "total_turns": 9,
+        "average_deviation": 1.1111111111111112
+      },
+      "next_state": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "script_info": {
+        "script_id": 5,
+        "script_type": "奶奶對話劇本",
+        "target_slot": "用藥狀況",
+        "source": "喜好興趣",
+        "is_transition_script": false
+      },
+      "dialogue_info": {
+        "expected_response": "哦，那我可以試試看。我通常會在做完氣功後，做一些拉筋運動，有時候腰部會有點不舒服，可能是以前傷過的關係。",
+        "actual_response": "哦，那我可以試試看。我通常會在做完氣功後，喝一杯溫水，再去院子裡種種我的心愛的花草，這樣心情也會變得更愉快。",
+        "similarity": 0.5458210110664368,
+        "deviation_description": "輕微偏離"
+      }
+    },
+    {
+      "turn": 10,
+      "state": [
+        1,
+        0,
+        0,
+        0,
+        1
+      ],
+      "action": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 1,
+        "deviation_level": 2,
+        "distance_improvement": 0,
+        "is_terminal": false,
+        "total_turns": 10,
+        "average_deviation": 1.2
+      },
+      "next_state": [
+        1,
+        0,
+        0,
+        0,
+        1
+      ],
+      "script_info": {
+        "script_id": 5,
+        "script_type": "奶奶對話劇本",
+        "target_slot": "用藥狀況",
+        "source": "喜好興趣",
+        "is_transition_script": false
+      },
+      "dialogue_info": {
+        "expected_response": "是的，我還是按照醫生的建議，定期去做檢查和用藥。",
+        "actual_response": "不，我不喜歡去醫院，那裡總是讓我感到很不舒服。",
+        "similarity": 0.3419785499572754,
+        "deviation_description": "明顯偏離"
+      }
+    },
+    {
+      "turn": 11,
+      "state": [
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      "action": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 0,
+        "deviation_level": 0,
+        "distance_improvement": 0,
+        "is_terminal": false,
+        "total_turns": 11,
+        "average_deviation": 1.0909090909090908
+      },
+      "next_state": [
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      "script_info": {
+        "script_id": 6,
+        "script_type": "過渡劇本",
+        "target_slot": "睡眠狀態",
+        "source": "老人可能作息",
+        "is_transition_script": true
+      },
+      "dialogue_info": {
+        "expected_response": "是啊，我其實也想找一些自己感舒服的方式來照顧好自己。",
+        "actual_response": "是的，我其實也希望找到一些讓自己感到舒適的方式來照顧好自己。",
+        "similarity": 0.9735977649688721,
+        "deviation_description": "相似"
+      }
+    },
+    {
+      "turn": 12,
+      "state": [
+        1,
+        0,
+        0,
+        0,
+        1
+      ],
+      "action": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 0,
+        "deviation_level": 3,
+        "distance_improvement": 0,
+        "is_terminal": false,
+        "total_turns": 12,
+        "average_deviation": 1.25
+      },
+      "next_state": [
+        1,
+        0,
+        0,
+        0,
+        1
+      ],
+      "script_info": {
+        "script_id": 6,
+        "script_type": "過渡劇本",
+        "target_slot": "睡眠狀態",
+        "source": "老人可能作息",
+        "is_transition_script": true
+      },
+      "dialogue_info": {
+        "expected_response": "睡眠品質確實對健康很重要，我有時候晚上也會容易失眠。",
+        "actual_response": "我聽說最新的流行歌曲也很好聽，你是不是聽過那首新歌呢？",
+        "similarity": 0.06683797389268875,
+        "deviation_description": "嚴重偏離"
+      }
+    },
+    {
+      "turn": 13,
+      "state": [
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      "action": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 0,
+        "deviation_level": 0,
+        "distance_improvement": 0,
+        "is_terminal": false,
+        "total_turns": 13,
+        "average_deviation": 1.1538461538461537
+      },
+      "next_state": [
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      "script_info": {
+        "script_id": 6,
+        "script_type": "過渡劇本",
+        "target_slot": "睡眠狀態",
+        "source": "老人可能作息",
+        "is_transition_script": true
+      },
+      "dialogue_info": {
+        "expected_response": "對呀，我也想找一些方法改善我的睡眠狀況，讓自己更有精神。",
+        "actual_response": "對呀，我也想找一些方法改善我的睡眠狀況，也許可以試試聽一些輕柔的古典音樂入睡。",
+        "similarity": 0.860277533531189,
+        "deviation_description": "相似"
+      }
+    },
+    {
+      "turn": 14,
+      "state": [
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "action": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 0,
+        "deviation_level": 3,
+        "distance_improvement": 0.19780219780219788,
+        "is_terminal": false,
+        "total_turns": 14,
+        "average_deviation": 1.2857142857142858
+      },
+      "next_state": [
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "script_info": {
+        "script_id": 5,
+        "script_type": "奶奶對話劇本",
+        "target_slot": "用藥狀況",
+        "source": "喜好興趣",
+        "is_transition_script": false
+      },
+      "dialogue_info": {
+        "expected_response": "對呀，我還是堅持每天早上去練習，感覺身體比較有活力，也有助於血糖的控制。",
+        "actual_response": "哦，昨天我在花園看到了一隻非常可愛的松鼠，牠跳來跳去的樣子真是令人開心啊！",
+        "similarity": 0.1503259837627411,
+        "deviation_description": "嚴重偏離"
+      }
+    },
+    {
+      "turn": 15,
+      "state": [
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "action": [
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 0,
+        "deviation_level": 3,
+        "distance_improvement": 0,
+        "is_terminal": false,
+        "total_turns": 15,
+        "average_deviation": 1.4
+      },
+      "next_state": [
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "script_info": {
+        "script_id": 2,
+        "script_type": "過渡劇本",
+        "target_slot": "睡眠狀態",
+        "source": "背景資料",
+        "is_transition_script": true
+      },
+      "dialogue_info": {
+        "expected_response": "是的，看到那隻可愛的松鼠跳來跳去，我的心情真的變得很愉快。",
+        "actual_response": "對呀，我最近開始對編織毛衣感興趣了，我正在為我的小孫子編織一件漂亮的毛衣呢！",
+        "similarity": 0.22041666507720947,
+        "deviation_description": "嚴重偏離"
+      }
+    },
+    {
+      "turn": 16,
+      "state": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "action": [
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 0,
+        "deviation_level": 1,
+        "distance_improvement": 0,
+        "is_terminal": false,
+        "total_turns": 16,
+        "average_deviation": 1.375
+      },
+      "next_state": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "script_info": {
+        "script_id": 2,
+        "script_type": "過渡劇本",
+        "target_slot": "睡眠狀態",
+        "source": "背景資料",
+        "is_transition_script": true
+      },
+      "dialogue_info": {
+        "expected_response": "是嗎？我之前聽說過這個說法，心情好的時候睡眠就會更好嗎？",
+        "actual_response": "是的呢！我最近晚上也開始練瑜珈了，感覺真的有助於放鬆身心，讓我更容易入睡呢。",
+        "similarity": 0.6436035633087158,
+        "deviation_description": "輕微偏離"
+      }
+    },
+    {
+      "turn": 17,
+      "state": [
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "action": [
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 0,
+        "deviation_level": 3,
+        "distance_improvement": 0,
+        "is_terminal": false,
+        "total_turns": 17,
+        "average_deviation": 1.4705882352941178
+      },
+      "next_state": [
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "script_info": {
+        "script_id": 2,
+        "script_type": "過渡劇本",
+        "target_slot": "睡眠狀態",
+        "source": "背景資料",
+        "is_transition_script": true
+      },
+      "dialogue_info": {
+        "expected_response": "這些方法聽起來都很不錯，或許我應該試試看。睡眠品質確實很重要，謝謝你提醒我。",
+        "actual_response": "哦，我剛收到了一封來自海外的神秘信件！可能是個令人振奮的冒險呢！",
+        "similarity": 0.13019898533821106,
+        "deviation_description": "嚴重偏離"
+      }
+    },
+    {
+      "turn": 18,
+      "state": [
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "action": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 0,
+        "deviation_level": 2,
+        "distance_improvement": 0.21241830065359468,
+        "is_terminal": false,
+        "total_turns": 18,
+        "average_deviation": 1.5
+      },
+      "next_state": [
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "script_info": {
+        "script_id": 10,
+        "script_type": "奶奶對話劇本",
+        "target_slot": "睡眠狀態",
+        "source": "作息",
+        "is_transition_script": false
+      },
+      "dialogue_info": {
+        "expected_response": "是啊，我每天都會早早起床做氣功，感覺身體也有精神多了。",
+        "actual_response": "哦，你說起氣功，讓我想起我今天撿到了一根很漂亮的貝殼呢！它看起來就像海底世界的一部分。",
+        "similarity": 0.3301064968109131,
+        "deviation_description": "明顯偏離"
+      }
+    },
+    {
+      "turn": 19,
+      "state": [
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "action": [
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 0,
+        "deviation_level": 3,
+        "distance_improvement": 0,
+        "is_terminal": false,
+        "total_turns": 19,
+        "average_deviation": 1.5789473684210527
+      },
+      "next_state": [
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "script_info": {
+        "script_id": 2,
+        "script_type": "過渡劇本",
+        "target_slot": "睡眠狀態",
+        "source": "背景資料",
+        "is_transition_script": true
+      },
+      "dialogue_info": {
+        "expected_response": "嗯，其實最近睡得還算不錯，可能是每天晚上放鬆身心的原因吧。",
+        "actual_response": "我最近在園藝方面有了新的興趣，不知道試種蝴蝶花怎麼樣呢？",
+        "similarity": 0.06219198554754257,
+        "deviation_description": "嚴重偏離"
+      }
+    },
+    {
+      "turn": 20,
+      "state": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "action": [
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 0,
+        "deviation_level": 0,
+        "distance_improvement": 0,
+        "is_terminal": false,
+        "total_turns": 20,
+        "average_deviation": 1.5
+      },
+      "next_state": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "script_info": {
+        "script_id": 2,
+        "script_type": "過渡劇本",
+        "target_slot": "睡眠狀態",
+        "source": "背景資料",
+        "is_transition_script": true
+      },
+      "dialogue_info": {
+        "expected_response": "是的呢，午睡也是一個很好的放鬆方式，有時候我也會在下午小睡一會兒。",
+        "actual_response": "是的呢，午睡也是一個很好的放鬆方式，有時候我也會在下午小睡一會兒，不過最近我開始學編織，想編一條漂亮的毛衣給你們看看呢。",
+        "similarity": 0.750069260597229,
+        "deviation_description": "相似"
+      }
+    },
+    {
+      "turn": 21,
+      "state": [
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "action": [
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 0,
+        "deviation_level": 3,
+        "distance_improvement": 0,
+        "is_terminal": false,
+        "total_turns": 21,
+        "average_deviation": 1.5714285714285714
+      },
+      "next_state": [
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "script_info": {
+        "script_id": 2,
+        "script_type": "過渡劇本",
+        "target_slot": "睡眠狀態",
+        "source": "背景資料",
+        "is_transition_script": true
+      },
+      "dialogue_info": {
+        "expected_response": "熱奶應該還挺適合的，我可以試試看。回想起來，我還有一些關於改善睡眠的小貼士呢。",
+        "actual_response": "我最近發現了一個很有趣的電視節目，講述了一個關於神秘失蹤事件的故事，你們有興趣一起來看嗎？",
+        "similarity": 0.10837315768003464,
+        "deviation_description": "嚴重偏離"
+      }
+    },
+    {
+      "turn": 22,
+      "state": [
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "action": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 0,
+        "deviation_level": 2,
+        "distance_improvement": 0.17532467532467533,
+        "is_terminal": false,
+        "total_turns": 22,
+        "average_deviation": 1.5909090909090908
+      },
+      "next_state": [
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "script_info": {
+        "script_id": 10,
+        "script_type": "奶奶對話劇本",
+        "target_slot": "睡眠狀態",
+        "source": "作息",
+        "is_transition_script": false
+      },
+      "dialogue_info": {
+        "expected_response": "是啊，我每天都會早早起床做氣功，感覺身體也有精神多了。",
+        "actual_response": "唉呀，其實我對氣功並不是很了解，不過我最近常常看到陽台上有一隻可愛的小松鼠，每天都會過來找我們要食物呢。",
+        "similarity": 0.31885477900505066,
+        "deviation_description": "明顯偏離"
+      }
+    },
+    {
+      "turn": 23,
+      "state": [
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "action": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 0,
+        "deviation_level": 3,
+        "distance_improvement": 0,
+        "is_terminal": false,
+        "total_turns": 23,
+        "average_deviation": 1.6521739130434783
+      },
+      "next_state": [
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "script_info": {
+        "script_id": 6,
+        "script_type": "備用過渡劇本",
+        "target_slot": "睡眠狀態",
+        "source": "老人可能作息",
+        "is_transition_script": true
+      },
+      "dialogue_info": {
+        "expected_response": "是啊，和你聊天我總是很高興。",
+        "actual_response": "我最近又重新開始編織毛衣了，想為你們做一件漂亮的小毛衣呢。",
+        "similarity": 0.17208203673362732,
+        "deviation_description": "嚴重偏離"
+      }
+    },
+    {
+      "turn": 24,
+      "state": [
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "action": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 0,
+        "deviation_level": 3,
+        "distance_improvement": 0,
+        "is_terminal": false,
+        "total_turns": 24,
+        "average_deviation": 1.7083333333333333
+      },
+      "next_state": [
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "script_info": {
+        "script_id": 6,
+        "script_type": "備用過渡劇本",
+        "target_slot": "睡眠狀態",
+        "source": "老人可能作息",
+        "is_transition_script": true
+      },
+      "dialogue_info": {
+        "expected_response": "謝謝你的關心，我都還好。",
+        "actual_response": "謝謝你們的關心，我最近又開始在花園種一些小花花，希望可以看到它們盛開的美麗景象呢。",
+        "similarity": 0.2356898933649063,
+        "deviation_description": "嚴重偏離"
+      }
+    },
+    {
+      "turn": 25,
+      "state": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "action": [
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 0,
+        "deviation_level": 0,
+        "distance_improvement": 0.11666666666666659,
+        "is_terminal": false,
+        "total_turns": 25,
+        "average_deviation": 1.64
+      },
+      "next_state": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "script_info": {
+        "script_id": 4,
+        "script_type": "奶奶對話劇本",
+        "target_slot": "飲食狀況",
+        "source": "背景資訊",
+        "is_transition_script": false
+      },
+      "dialogue_info": {
+        "expected_response": "那真是太好了，我的小寶貝。我一般早餐吃完後會去公園練氣功，回來後就是我最放鬆的時間。",
+        "actual_response": "那真是太好了，親愛的孩子。我一般早餐後會去公園散步，回來後就是我最放鬆的時光。",
+        "similarity": 0.9425588846206665,
+        "deviation_description": "相似"
+      }
+    },
+    {
+      "turn": 26,
+      "state": [
+        0,
+        0,
+        0,
+        1,
+        0
+      ],
+      "action": [
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 1,
+        "deviation_level": 0,
+        "distance_improvement": 0,
+        "is_terminal": false,
+        "total_turns": 26,
+        "average_deviation": 1.5769230769230769
+      },
+      "next_state": [
+        0,
+        0,
+        0,
+        1,
+        0
+      ],
+      "script_info": {
+        "script_id": 4,
+        "script_type": "奶奶對話劇本",
+        "target_slot": "飲食狀況",
+        "source": "背景資訊",
+        "is_transition_script": false
+      },
+      "dialogue_info": {
+        "expected_response": "我早餐通常都會吃一碗燕麥粥，配上一些新鮮的水果。",
+        "actual_response": "我通常會在早餐時享用一碗燕麥粥，再搭配一些新鮮的水果。",
+        "similarity": 0.9853126406669617,
+        "deviation_description": "相似"
+      }
+    },
+    {
+      "turn": 27,
+      "state": [
+        0,
+        0,
+        0,
+        1,
+        1
+      ],
+      "action": [
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 1,
+        "deviation_level": 2,
+        "distance_improvement": 0,
+        "is_terminal": false,
+        "total_turns": 27,
+        "average_deviation": 1.5925925925925926
+      },
+      "next_state": [
+        0,
+        0,
+        0,
+        1,
+        1
+      ],
+      "script_info": {
+        "script_id": 4,
+        "script_type": "奶奶對話劇本",
+        "target_slot": "飲食狀況",
+        "source": "背景資訊",
+        "is_transition_script": false
+      },
+      "dialogue_info": {
+        "expected_response": "咳咳，你這孩子，嘴真甜。我也就是煮點燕麥粥，切切水果，簡單的事情還是可以做的。",
+        "actual_response": "唉呀，你說什麼來著？我最近遇到一隻非常可愛的小松鼠！它每天都會在我家附近的樹上跳來跳去，看著它我就覺得心情好多了呢。",
+        "similarity": 0.3129642605781555,
+        "deviation_description": "明顯偏離"
+      }
+    },
+    {
+      "turn": 28,
+      "state": [
+        0,
+        0,
+        0,
+        1,
+        1
+      ],
+      "action": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 0,
+        "deviation_level": 3,
+        "distance_improvement": 0,
+        "is_terminal": false,
+        "total_turns": 28,
+        "average_deviation": 1.6428571428571428
+      },
+      "next_state": [
+        0,
+        0,
+        0,
+        1,
+        1
+      ],
+      "script_info": {
+        "script_id": 6,
+        "script_type": "過渡劇本",
+        "target_slot": "睡眠狀態",
+        "source": "老人可能作息",
+        "is_transition_script": true
+      },
+      "dialogue_info": {
+        "expected_response": "是啊，我通常都會在晚上九點左右就上床睡覺了。",
+        "actual_response": "啊，我曾經跟那只小松鼠分享了我的燕麥粥呢！它吃得津津有味，真是可愛極了。",
+        "similarity": 0.11695544421672821,
+        "deviation_description": "嚴重偏離"
+      }
+    },
+    {
+      "turn": 29,
+      "state": [
+        0,
+        0,
+        0,
+        1,
+        1
+      ],
+      "action": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 0,
+        "deviation_level": 3,
+        "distance_improvement": 0,
+        "is_terminal": false,
+        "total_turns": 29,
+        "average_deviation": 1.6896551724137931
+      },
+      "next_state": [
+        0,
+        0,
+        0,
+        1,
+        1
+      ],
+      "script_info": {
+        "script_id": 6,
+        "script_type": "過渡劇本",
+        "target_slot": "睡眠狀態",
+        "source": "老人可能作息",
+        "is_transition_script": true
+      },
+      "dialogue_info": {
+        "expected_response": "是的，睡眠對身體和心情都有很大的影響。",
+        "actual_response": "我最近在看一部很好看的電視劇，裡面的女主角真是漂亮啊！",
+        "similarity": 0.08821272850036621,
+        "deviation_description": "嚴重偏離"
+      }
+    },
+    {
+      "turn": 30,
+      "state": [
+        0,
+        0,
+        0,
+        1,
+        1
+      ],
+      "action": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 0,
+        "deviation_level": 2,
+        "distance_improvement": 0,
+        "is_terminal": false,
+        "total_turns": 30,
+        "average_deviation": 1.7
+      },
+      "next_state": [
+        0,
+        0,
+        0,
+        1,
+        1
+      ],
+      "script_info": {
+        "script_id": 6,
+        "script_type": "過渡劇本",
+        "target_slot": "睡眠狀態",
+        "source": "老人可能作息",
+        "is_transition_script": true
+      },
+      "dialogue_info": {
+        "expected_response": "其實我會在睡前泡一杯熱奶，再聽著輕音樂放鬆自己。這樣一來，我就能很快進入夢鄉了。",
+        "actual_response": "其實我最近在想我年輕時那個追求我追得好辛苦啊，哈哈哈！",
+        "similarity": 0.30533847212791443,
+        "deviation_description": "明顯偏離"
+      }
+    },
+    {
+      "turn": 31,
+      "state": [
+        0,
+        0,
+        0,
+        1,
+        1
+      ],
+      "action": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 0,
+        "deviation_level": 2,
+        "distance_improvement": 0.09354838709677427,
+        "is_terminal": false,
+        "total_turns": 31,
+        "average_deviation": 1.7096774193548387
+      },
+      "next_state": [
+        0,
+        0,
+        0,
+        1,
+        1
+      ],
+      "script_info": {
+        "script_id": 6,
+        "script_type": "奶奶對話劇本",
+        "target_slot": "睡眠狀態",
+        "source": "喜好興趣",
+        "is_transition_script": false
+      },
+      "dialogue_info": {
+        "expected_response": "是呀，我每天早上都會去陽台照顧它們，看到它們繁花似錦，我就覺得很開心。",
+        "actual_response": "哎呀，我覺得現在的年輕人太注重外表了，光顧著看電視劇和打扮，沒有時間去欣賞大自然的美麗。我每天都會花時間在花園裡，看著花草茂盛，感受大自然的鬼斧神工。這樣的生活才是最快樂的啊！",
+        "similarity": 0.44399362802505493,
+        "deviation_description": "明顯偏離"
+      }
+    },
+    {
+      "turn": 32,
+      "state": [
+        0,
+        0,
+        0,
+        1,
+        0
+      ],
+      "action": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 0,
+        "deviation_level": 0,
+        "distance_improvement": 0,
+        "is_terminal": false,
+        "total_turns": 32,
+        "average_deviation": 1.65625
+      },
+      "next_state": [
+        0,
+        0,
+        0,
+        1,
+        0
+      ],
+      "script_info": {
+        "script_id": 6,
+        "script_type": "過渡劇本",
+        "target_slot": "睡眠狀態",
+        "source": "老人可能作息",
+        "is_transition_script": true
+      },
+      "dialogue_info": {
+        "expected_response": "是啊，我確實每天都會午睡一會兒，感覺精神好多了。",
+        "actual_response": "是啊，我確實每天都會在午睡前喝一杯熱牛奶，感覺精神好多了。",
+        "similarity": 0.731273889541626,
+        "deviation_description": "相似"
+      }
+    },
+    {
+      "turn": 33,
+      "state": [
+        0,
+        0,
+        0,
+        1,
+        0
+      ],
+      "action": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 0,
+        "deviation_level": 0,
+        "distance_improvement": 0,
+        "is_terminal": false,
+        "total_turns": 33,
+        "average_deviation": 1.606060606060606
+      },
+      "next_state": [
+        0,
+        0,
+        0,
+        1,
+        0
+      ],
+      "script_info": {
+        "script_id": 6,
+        "script_type": "過渡劇本",
+        "target_slot": "睡眠狀態",
+        "source": "老人可能作息",
+        "is_transition_script": true
+      },
+      "dialogue_info": {
+        "expected_response": "對啊，午睡真的可以讓人感覺精神焕發呢。",
+        "actual_response": "是的，午睡確實能讓人感覺神清氣爽呢。",
+        "similarity": 0.9382113218307495,
+        "deviation_description": "相似"
+      }
+    },
+    {
+      "turn": 34,
+      "state": [
+        0,
+        0,
+        0,
+        1,
+        0
+      ],
+      "action": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 0,
+        "deviation_level": 0,
+        "distance_improvement": 0,
+        "is_terminal": false,
+        "total_turns": 34,
+        "average_deviation": 1.5588235294117647
+      },
+      "next_state": [
+        0,
+        0,
+        0,
+        1,
+        0
+      ],
+      "script_info": {
+        "script_id": 6,
+        "script_type": "過渡劇本",
+        "target_slot": "睡眠狀態",
+        "source": "老人可能作息",
+        "is_transition_script": true
+      },
+      "dialogue_info": {
+        "expected_response": "嗯，其實我最近晚上睡得還挺好的，可能是因為我白天有午睡的原因吧。睡眠對身體和心理健康真的很重要。",
+        "actual_response": "其實午睡對我來說不太容易，有時候睡不著反而讓我更疲倦。不過我會試著在下午的時候休息一下，也能讓我感覺稍微恢復精神。",
+        "similarity": 0.7779549360275269,
+        "deviation_description": "相似"
+      }
+    },
+    {
+      "turn": 35,
+      "state": [
+        0,
+        0,
+        0,
+        1,
+        1
+      ],
+      "action": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 0,
+        "deviation_level": 2,
+        "distance_improvement": 0.0831932773109243,
+        "is_terminal": false,
+        "total_turns": 35,
+        "average_deviation": 1.5714285714285714
+      },
+      "next_state": [
+        0,
+        0,
+        0,
+        1,
+        1
+      ],
+      "script_info": {
+        "script_id": 6,
+        "script_type": "奶奶對話劇本",
+        "target_slot": "睡眠狀態",
+        "source": "喜好興趣",
+        "is_transition_script": false
+      },
+      "dialogue_info": {
+        "expected_response": "是呀，我每天早上都會去陽台照顧它們，看到它們繁花似錦，我就覺得很開心。",
+        "actual_response": "我最近也喜歡聽廣播劇集，裡面的故事總是讓我情緒激動呢。",
+        "similarity": 0.323178768157959,
+        "deviation_description": "明顯偏離"
+      }
+    },
+    {
+      "turn": 36,
+      "state": [
+        0,
+        0,
+        0,
+        1,
+        1
+      ],
+      "action": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 0,
+        "deviation_level": 3,
+        "distance_improvement": 0,
+        "is_terminal": false,
+        "total_turns": 36,
+        "average_deviation": 1.6111111111111112
+      },
+      "next_state": [
+        0,
+        0,
+        0,
+        1,
+        1
+      ],
+      "script_info": {
+        "script_id": 6,
+        "script_type": "過渡劇本",
+        "target_slot": "睡眠狀態",
+        "source": "老人可能作息",
+        "is_transition_script": true
+      },
+      "dialogue_info": {
+        "expected_response": "哦，其實我晚上睡眠不太穩定，可能也是因為年紀大了吧。",
+        "actual_response": "我最喜歡聽音樂劇了，歌聲和樂曲總能讓我情緒高昂呢！",
+        "similarity": 0.12349758297204971,
+        "deviation_description": "嚴重偏離"
+      }
+    },
+    {
+      "turn": 37,
+      "state": [
+        0,
+        0,
+        0,
+        1,
+        0
+      ],
+      "action": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 0,
+        "deviation_level": 0,
+        "distance_improvement": 0,
+        "is_terminal": false,
+        "total_turns": 37,
+        "average_deviation": 1.5675675675675675
+      },
+      "next_state": [
+        0,
+        0,
+        0,
+        1,
+        0
+      ],
+      "script_info": {
+        "script_id": 6,
+        "script_type": "過渡劇本",
+        "target_slot": "睡眠狀態",
+        "source": "老人可能作息",
+        "is_transition_script": true
+      },
+      "dialogue_info": {
+        "expected_response": "是啊，我會再試試不同的方法，希望能有所改善。",
+        "actual_response": "是的，我會嘗試不同的方法，希望能有所改善。",
+        "similarity": 0.974957287311554,
+        "deviation_description": "相似"
+      }
+    },
+    {
+      "turn": 38,
+      "state": [
+        0,
+        0,
+        0,
+        1,
+        0
+      ],
+      "action": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 0,
+        "deviation_level": 1,
+        "distance_improvement": 0,
+        "is_terminal": false,
+        "total_turns": 38,
+        "average_deviation": 1.5526315789473684
+      },
+      "next_state": [
+        0,
+        0,
+        0,
+        1,
+        0
+      ],
+      "script_info": {
+        "script_id": 6,
+        "script_type": "過渡劇本",
+        "target_slot": "睡眠狀態",
+        "source": "老人可能作息",
+        "is_transition_script": true
+      },
+      "dialogue_info": {
+        "expected_response": "好主意，我會試試看，謝謝你的建議。",
+        "actual_response": "好主意，我會試試看，謝謝你的建議，也許我可以試試聽音樂劇的歌曲入睡呢。",
+        "similarity": 0.6620270013809204,
+        "deviation_description": "輕微偏離"
+      }
+    },
+    {
+      "turn": 39,
+      "state": [
+        0,
+        1,
+        0,
+        1,
+        0
+      ],
+      "action": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 1,
+        "deviation_level": 0,
+        "distance_improvement": 0.10053981106612686,
+        "is_terminal": false,
+        "total_turns": 39,
+        "average_deviation": 1.5128205128205128
+      },
+      "next_state": [
+        0,
+        1,
+        0,
+        1,
+        0
+      ],
+      "script_info": {
+        "script_id": 10,
+        "script_type": "奶奶對話劇本",
+        "target_slot": "睡眠狀態",
+        "source": "作息",
+        "is_transition_script": false
+      },
+      "dialogue_info": {
+        "expected_response": "是啊，我每天都會早早起床做氣功，感覺身體也有精神多了。",
+        "actual_response": "是啊，我每天都會早早起床做氣功，感覺身體也有精神多了。不過有時候也會偷懶，睡個懶覺。",
+        "similarity": 0.9330158233642578,
+        "deviation_description": "相似"
+      }
+    },
+    {
+      "turn": 40,
+      "state": [
+        0,
+        1,
+        0,
+        1,
+        0
+      ],
+      "action": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 1,
+        "deviation_level": 0,
+        "distance_improvement": 0,
+        "is_terminal": false,
+        "total_turns": 40,
+        "average_deviation": 1.475
+      },
+      "next_state": [
+        0,
+        1,
+        0,
+        1,
+        0
+      ],
+      "script_info": {
+        "script_id": 10,
+        "script_type": "奶奶對話劇本",
+        "target_slot": "睡眠狀態",
+        "source": "作息",
+        "is_transition_script": false
+      },
+      "dialogue_info": {
+        "expected_response": "我一般都會在看完八點檔之後就去睡覺，大概就是十點左右。",
+        "actual_response": "我一般都會在看完八點檔之後就去睡覺，大概就是十點左右。",
+        "similarity": 1.0,
+        "deviation_description": "相似"
+      }
+    },
+    {
+      "turn": 41,
+      "state": [
+        0,
+        1,
+        0,
+        1,
+        1
+      ],
+      "action": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 1,
+        "deviation_level": 2,
+        "distance_improvement": 0,
+        "is_terminal": false,
+        "total_turns": 41,
+        "average_deviation": 1.4878048780487805
+      },
+      "next_state": [
+        0,
+        1,
+        0,
+        1,
+        1
+      ],
+      "script_info": {
+        "script_id": 10,
+        "script_type": "奶奶對話劇本",
+        "target_slot": "睡眠狀態",
+        "source": "作息",
+        "is_transition_script": false
+      },
+      "dialogue_info": {
+        "expected_response": "我有時候會做夢，但大多時候都能一覺到天亮，不會半夜醒來。",
+        "actual_response": "我最近想養隻小貓，可是兒子不讓，他說他晚上會打呼嚕，怕吵醒小貓。",
+        "similarity": 0.42832139134407043,
+        "deviation_description": "明顯偏離"
+      }
+    },
+    {
+      "turn": 42,
+      "state": [
+        0,
+        1,
+        0,
+        1,
+        0
+      ],
+      "action": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 0,
+        "deviation_level": 0,
+        "distance_improvement": 0,
+        "is_terminal": false,
+        "total_turns": 42,
+        "average_deviation": 1.4523809523809523
+      },
+      "next_state": [
+        0,
+        1,
+        0,
+        1,
+        0
+      ],
+      "script_info": {
+        "script_id": 1,
+        "script_type": "過渡劇本",
+        "target_slot": "用藥狀況",
+        "source": "背景資料",
+        "is_transition_script": true
+      },
+      "dialogue_info": {
+        "expected_response": "是啊，我看到朋友家的小貓都好可愛，我也好想養一隻。",
+        "actual_response": "是啊，我看到朋友家的小貓都好可愛，我也好想養一隻呢。不過我擔心我家的魚缸會被小貓打翻，那就糟糕了。",
+        "similarity": 0.8860042691230774,
+        "deviation_description": "相似"
+      }
+    },
+    {
+      "turn": 43,
+      "state": [
+        0,
+        1,
+        0,
+        1,
+        0
+      ],
+      "action": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 0,
+        "deviation_level": 0,
+        "distance_improvement": 0,
+        "is_terminal": false,
+        "total_turns": 43,
+        "average_deviation": 1.4186046511627908
+      },
+      "next_state": [
+        0,
+        1,
+        0,
+        1,
+        0
+      ],
+      "script_info": {
+        "script_id": 1,
+        "script_type": "過渡劇本",
+        "target_slot": "用藥狀況",
+        "source": "背景資料",
+        "is_transition_script": true
+      },
+      "dialogue_info": {
+        "expected_response": "是啊，我有時候晚上也會因為一些不適而影響睡眠。",
+        "actual_response": "其實我覺得晚上睡覺時，最重要的是擁有一個舒適的環境，才能好好休息。睡眠品質對於身心健康真的非常重要呢。",
+        "similarity": 0.7808536291122437,
+        "deviation_description": "相似"
+      }
+    },
+    {
+      "turn": 44,
+      "state": [
+        0,
+        1,
+        0,
+        1,
+        1
+      ],
+      "action": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 0,
+        "deviation_level": 3,
+        "distance_improvement": 0,
+        "is_terminal": false,
+        "total_turns": 44,
+        "average_deviation": 1.4545454545454546
+      },
+      "next_state": [
+        0,
+        1,
+        0,
+        1,
+        1
+      ],
+      "script_info": {
+        "script_id": 1,
+        "script_type": "過渡劇本",
+        "target_slot": "用藥狀況",
+        "source": "背景資料",
+        "is_transition_script": true
+      },
+      "dialogue_info": {
+        "expected_response": "對啊，也許我應該好好檢討一下自己的用藥情況，看看有沒有可以改進的地方。",
+        "actual_response": "其實我覺得我最近喜歡上了一個電視節目，裡面的劇情超吸引人的！",
+        "similarity": 0.16190654039382935,
+        "deviation_description": "嚴重偏離"
+      }
+    },
+    {
+      "turn": 45,
+      "state": [
+        1,
+        1,
+        0,
+        1,
+        0
+      ],
+      "action": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 1,
+        "deviation_level": 0,
+        "distance_improvement": 0.06515151515151507,
+        "is_terminal": false,
+        "total_turns": 45,
+        "average_deviation": 1.4222222222222223
+      },
+      "next_state": [
+        1,
+        1,
+        0,
+        1,
+        0
+      ],
+      "script_info": {
+        "script_id": 5,
+        "script_type": "奶奶對話劇本",
+        "target_slot": "用藥狀況",
+        "source": "喜好興趣",
+        "is_transition_script": false
+      },
+      "dialogue_info": {
+        "expected_response": "對呀，我還是堅持每天早上去練習，感覺身體比較有活力，也有助於血糖的控制。",
+        "actual_response": "是的，我還是堅持每天早上去運動，感覺身體比較有活力，也有助於控制血糖的情況。",
+        "similarity": 0.9779160618782043,
+        "deviation_description": "相似"
+      }
+    },
+    {
+      "turn": 46,
+      "state": [
+        1,
+        1,
+        0,
+        1,
+        0
+      ],
+      "action": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 1,
+        "deviation_level": 0,
+        "distance_improvement": 0,
+        "is_terminal": false,
+        "total_turns": 46,
+        "average_deviation": 1.391304347826087
+      },
+      "next_state": [
+        1,
+        1,
+        0,
+        1,
+        0
+      ],
+      "script_info": {
+        "script_id": 5,
+        "script_type": "奶奶對話劇本",
+        "target_slot": "用藥狀況",
+        "source": "喜好興趣",
+        "is_transition_script": false
+      },
+      "dialogue_info": {
+        "expected_response": "哦，那我可以試試看。我通常會在做完氣功後，做一些拉筋運動，有時候腰部會有點不舒服，可能是以前傷過的關係。",
+        "actual_response": "當然可以試試看。我通常會在做完氣功後，進行一些拉筋運動，有時候會感覺到腰部有點不舒服，可能是以前受傷的緣故。",
+        "similarity": 0.9781537055969238,
+        "deviation_description": "相似"
+      }
+    },
+    {
+      "turn": 47,
+      "state": [
+        0,
+        1,
+        0,
+        1,
+        1
+      ],
+      "action": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 0,
+        "deviation_level": 3,
+        "distance_improvement": 0,
+        "is_terminal": false,
+        "total_turns": 47,
+        "average_deviation": 1.425531914893617
+      },
+      "next_state": [
+        0,
+        1,
+        0,
+        1,
+        1
+      ],
+      "script_info": {
+        "script_id": 5,
+        "script_type": "奶奶對話劇本",
+        "target_slot": "用藥狀況",
+        "source": "喜好興趣",
+        "is_transition_script": false
+      },
+      "dialogue_info": {
+        "expected_response": "是的，我還是按照醫生的建議，定期去做檢查和用藥。",
+        "actual_response": "噢，對了，我前幾天去公園看到一隻可愛的小松鼠呢！它真是活潑可愛，讓我想到了我們小時候在山裡遇到的野生動物呢。",
+        "similarity": 0.0750250518321991,
+        "deviation_description": "嚴重偏離"
+      }
+    },
+    {
+      "turn": 48,
+      "state": [
+        0,
+        1,
+        0,
+        1,
+        0
+      ],
+      "action": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 0,
+        "deviation_level": 0,
+        "distance_improvement": 0,
+        "is_terminal": false,
+        "total_turns": 48,
+        "average_deviation": 1.3958333333333333
+      },
+      "next_state": [
+        0,
+        1,
+        0,
+        1,
+        0
+      ],
+      "script_info": {
+        "script_id": 5,
+        "script_type": "備用過渡劇本",
+        "target_slot": "用藥狀況",
+        "source": "老人可能作息",
+        "is_transition_script": true
+      },
+      "dialogue_info": {
+        "expected_response": "是啊，和你聊天我總是很高興。",
+        "actual_response": "當然啊，和你聊天我總是很開心。",
+        "similarity": 0.9880568981170654,
+        "deviation_description": "相似"
+      }
+    },
+    {
+      "turn": 49,
+      "state": [
+        0,
+        1,
+        0,
+        1,
+        1
+      ],
+      "action": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 0,
+        "deviation_level": 3,
+        "distance_improvement": 0,
+        "is_terminal": false,
+        "total_turns": 49,
+        "average_deviation": 1.4285714285714286
+      },
+      "next_state": [
+        0,
+        1,
+        0,
+        1,
+        1
+      ],
+      "script_info": {
+        "script_id": 5,
+        "script_type": "備用過渡劇本",
+        "target_slot": "用藥狀況",
+        "source": "老人可能作息",
+        "is_transition_script": true
+      },
+      "dialogue_info": {
+        "expected_response": "謝謝你的關心，我都還好。",
+        "actual_response": "我最近在看一本很有趣的小說呢，裡面的故事情節真是讓人捨不得放下書。",
+        "similarity": 0.03840649873018265,
+        "deviation_description": "嚴重偏離"
+      }
+    },
+    {
+      "turn": 50,
+      "state": [
+        1,
+        1,
+        0,
+        1,
+        0
+      ],
+      "action": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 1,
+        "deviation_level": 1,
+        "distance_improvement": 0.0791836734693877,
+        "is_terminal": false,
+        "total_turns": 50,
+        "average_deviation": 1.42
+      },
+      "next_state": [
+        1,
+        1,
+        0,
+        1,
+        0
+      ],
+      "script_info": {
+        "script_id": 5,
+        "script_type": "奶奶對話劇本",
+        "target_slot": "用藥狀況",
+        "source": "喜好興趣",
+        "is_transition_script": false
+      },
+      "dialogue_info": {
+        "expected_response": "對呀，我還是堅持每天早上去練習，感覺身體比較有活力，也有助於血糖的控制。",
+        "actual_response": "對呀，我最近也開始學烘焙，每天都在研究新的食譜，感覺很有趣呢。",
+        "similarity": 0.5425833463668823,
+        "deviation_description": "輕微偏離"
+      }
+    },
+    {
+      "turn": 51,
+      "state": [
+        1,
+        1,
+        0,
+        1,
+        0
+      ],
+      "action": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 1,
+        "deviation_level": 0,
+        "distance_improvement": 0,
+        "is_terminal": false,
+        "total_turns": 51,
+        "average_deviation": 1.392156862745098
+      },
+      "next_state": [
+        1,
+        1,
+        0,
+        1,
+        0
+      ],
+      "script_info": {
+        "script_id": 5,
+        "script_type": "奶奶對話劇本",
+        "target_slot": "用藥狀況",
+        "source": "喜好興趣",
+        "is_transition_script": false
+      },
+      "dialogue_info": {
+        "expected_response": "哦，那我可以試試看。我通常會在做完氣功後，做一些拉筋運動，有時候腰部會有點不舒服，可能是以前傷過的關係。",
+        "actual_response": "嗯，對呀，我還在做氣功，但最近開始加入了一些新的動作，感覺對我腰部的不舒服有些幫助呢。",
+        "similarity": 0.8524559736251831,
+        "deviation_description": "相似"
+      }
+    },
+    {
+      "turn": 52,
+      "state": [
+        1,
+        1,
+        0,
+        1,
+        0
+      ],
+      "action": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 1,
+        "deviation_level": 0,
+        "distance_improvement": 0,
+        "is_terminal": false,
+        "total_turns": 52,
+        "average_deviation": 1.3653846153846154
+      },
+      "next_state": [
+        1,
+        1,
+        0,
+        1,
+        0
+      ],
+      "script_info": {
+        "script_id": 5,
+        "script_type": "奶奶對話劇本",
+        "target_slot": "用藥狀況",
+        "source": "喜好興趣",
+        "is_transition_script": false
+      },
+      "dialogue_info": {
+        "expected_response": "是的，我還是按照醫生的建議，定期去做檢查和用藥。",
+        "actual_response": "是的，我還是按照醫生的建議，定期去做檢查和用藥，不過最近開始加入了一些中草藥療法，感覺對我真的有些幫助呢。",
+        "similarity": 0.8679762482643127,
+        "deviation_description": "相似"
+      }
+    },
+    {
+      "turn": 53,
+      "state": [
+        1,
+        1,
+        0,
+        1,
+        0
+      ],
+      "action": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 1,
+        "deviation_level": 0,
+        "distance_improvement": 0,
+        "is_terminal": false,
+        "total_turns": 53,
+        "average_deviation": 1.3396226415094339
+      },
+      "next_state": [
+        1,
+        1,
+        0,
+        1,
+        0
+      ],
+      "script_info": {
+        "script_id": 5,
+        "script_type": "奶奶對話劇本",
+        "target_slot": "用藥狀況",
+        "source": "喜好興趣",
+        "is_transition_script": false
+      },
+      "dialogue_info": {
+        "expected_response": "對，我每天都會按時服藥。我知道這對我身體的健康很重要，所以我很注意。",
+        "actual_response": "是的，我每天都會按時服藥。我知道這對我身體的健康很重要，所以我會把藥丸放在一個漂亮的小盒子裡，提醒自己服用。",
+        "similarity": 0.9021201729774475,
+        "deviation_description": "相似"
+      }
+    },
+    {
+      "turn": 54,
+      "state": [
+        1,
+        1,
+        0,
+        1,
+        0
+      ],
+      "action": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 1,
+        "deviation_level": 0,
+        "distance_improvement": 0,
+        "is_terminal": false,
+        "total_turns": 54,
+        "average_deviation": 1.3148148148148149
+      },
+      "next_state": [
+        1,
+        1,
+        0,
+        1,
+        0
+      ],
+      "script_info": {
+        "script_id": 5,
+        "script_type": "奶奶對話劇本",
+        "target_slot": "用藥狀況",
+        "source": "喜好興趣",
+        "is_transition_script": false
+      },
+      "dialogue_info": {
+        "expected_response": "有時候服藥後我會覺得有點頭暈，但是我會注意休息，一般很快就會恢復。",
+        "actual_response": "有時候吃完藥後我會感覺有點暈，但我會注意休息，通常很快就會好起來。",
+        "similarity": 0.9559556245803833,
+        "deviation_description": "相似"
+      }
+    },
+    {
+      "turn": 55,
+      "state": [
+        1,
+        1,
+        0,
+        1,
+        0
+      ],
+      "action": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 1,
+        "deviation_level": 0,
+        "distance_improvement": 0,
+        "is_terminal": false,
+        "total_turns": 55,
+        "average_deviation": 1.290909090909091
+      },
+      "next_state": [
+        1,
+        1,
+        0,
+        1,
+        0
+      ],
+      "script_info": {
+        "script_id": 5,
+        "script_type": "奶奶對話劇本",
+        "target_slot": "用藥狀況",
+        "source": "喜好興趣",
+        "is_transition_script": false
+      },
+      "dialogue_info": {
+        "expected_response": "是的，我還是有每天量血壓的習慣，這樣我可以及時知道自己的身體狀況。",
+        "actual_response": "是的，我也習慣每天檢查一下我的血壓，這樣我就能隨時知道自己的身體狀況。",
+        "similarity": 0.9408795833587646,
+        "deviation_description": "相似"
+      }
+    },
+    {
+      "turn": 56,
+      "state": [
+        1,
+        1,
+        0,
+        1,
+        0
+      ],
+      "action": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 1,
+        "deviation_level": 0,
+        "distance_improvement": 0.015909090909090873,
+        "is_terminal": false,
+        "total_turns": 56,
+        "average_deviation": 1.2678571428571428
+      },
+      "next_state": [
+        1,
+        1,
+        0,
+        1,
+        0
+      ],
+      "script_info": {
+        "script_id": 8,
+        "script_type": "奶奶對話劇本",
+        "target_slot": "飲食狀況",
+        "source": "喜好興趣",
+        "is_transition_script": false
+      },
+      "dialogue_info": {
+        "expected_response": "有阿，今天早上天氣真好，我就去公園練了一下氣功。回來後就吃了早餐。",
+        "actual_response": "對阿，今天早上天氣真好，我就去公園做了一下氣功。回來後就吃了早餐。",
+        "similarity": 0.9916254281997681,
+        "deviation_description": "相似"
+      }
+    },
+    {
+      "turn": 57,
+      "state": [
+        1,
+        1,
+        0,
+        1,
+        0
+      ],
+      "action": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 1,
+        "deviation_level": 0,
+        "distance_improvement": 0,
+        "is_terminal": false,
+        "total_turns": 57,
+        "average_deviation": 1.2456140350877194
+      },
+      "next_state": [
+        1,
+        1,
+        0,
+        1,
+        0
+      ],
+      "script_info": {
+        "script_id": 8,
+        "script_type": "奶奶對話劇本",
+        "target_slot": "飲食狀況",
+        "source": "喜好興趣",
+        "is_transition_script": false
+      },
+      "dialogue_info": {
+        "expected_response": "我通常吃一點燕麥粥和一些水果，有時候會加一點豆漿。",
+        "actual_response": "我通常吃一碗燕麥粥，再搭配上一些新鮮切片的水果，有時候會加上一小碗豆漿。",
+        "similarity": 0.9548490643501282,
+        "deviation_description": "相似"
+      }
+    },
+    {
+      "turn": 58,
+      "state": [
+        1,
+        1,
+        0,
+        1,
+        0
+      ],
+      "action": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 1,
+        "deviation_level": 0,
+        "distance_improvement": 0,
+        "is_terminal": false,
+        "total_turns": 58,
+        "average_deviation": 1.2241379310344827
+      },
+      "next_state": [
+        1,
+        1,
+        0,
+        1,
+        0
+      ],
+      "script_info": {
+        "script_id": 8,
+        "script_type": "奶奶對話劇本",
+        "target_slot": "飲食狀況",
+        "source": "喜好興趣",
+        "is_transition_script": false
+      },
+      "dialogue_info": {
+        "expected_response": "午餐我通常吃點蔬菜和肉，晚餐我會吃得輕一點，像是湯或是炒菜。",
+        "actual_response": "午餐通常吃些蔬菜和肉，晚餐則會選擇較清淡的食物，像是湯或炒菜。",
+        "similarity": 0.9420183897018433,
+        "deviation_description": "相似"
+      }
+    },
+    {
+      "turn": 59,
+      "state": [
+        1,
+        1,
+        0,
+        1,
+        0
+      ],
+      "action": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "reward_requirements": {
+        "slot_filled": 1,
+        "deviation_level": 0,
+        "distance_improvement": 0,
+        "is_terminal": true,
+        "total_turns": 59,
+        "average_deviation": 1.2033898305084745
+      },
+      "next_state": [
+        1,
+        1,
+        0,
+        1,
+        0
+      ],
+      "script_info": {
+        "script_id": 8,
+        "script_type": "奶奶對話劇本",
+        "target_slot": "飲食狀況",
+        "source": "喜好興趣",
+        "is_transition_script": false
+      },
+      "dialogue_info": {
+        "expected_response": "我大部分的時候都是自己做，不過你媽媽有時候也會過來幫忙。",
+        "actual_response": "我大部分的時候都是自己下廚，但有時候會讓兒子來幫忙。",
+        "similarity": 0.7074459195137024,
+        "deviation_description": "相似"
+      }
+    }
+  ],
+  "metadata": {
+    "slot_definitions": {
+      "用藥狀況": [
+        "量血壓情況",
+        "服藥情況",
+        "身體不適",
+        "用藥時間"
+      ],
+      "睡眠狀態": [
+        "起床時間",
+        "睡眠時間",
+        "小睡情況",
+        "睡眠品質"
+      ],
+      "作息活動": [
+        "居家運動",
+        "外出情況",
+        "洗澡情況",
+        "看電視情況"
+      ],
+      "飲食狀況": [
+        "三餐時間",
+        "食物內容",
+        "廚房使用",
+        "冰箱使用"
+      ]
+    },
+    "deviation_thresholds": {
+      "0": 0.7,
+      "1": 0.5,
+      "2": 0.3,
+      "3": 0.0
+    },
+    "high_deviation_threshold": 2
+  }
+}
