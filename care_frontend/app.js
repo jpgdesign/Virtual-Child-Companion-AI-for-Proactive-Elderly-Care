@@ -492,12 +492,64 @@ function renderComposer(buttonLabel = "送出訊息") {
   `;
 }
 
-function renderPersonaSection(persona) {
+function renderMetricGrid(items, className = "summary-grid") {
+  return `
+    <div class="${className}">
+      ${items.map((item) => `
+        <article class="summary-item">
+          <strong>${escapeHtml(item.value)}</strong>
+          <span>${escapeHtml(item.label)}</span>
+        </article>
+      `).join("")}
+    </div>
+  `;
+}
+
+function renderDetailGrid(items, className = "detail-grid") {
+  return `
+    <div class="${className}">
+      ${items.map((item) => `
+        <article class="detail-item">
+          <span class="detail-label">${escapeHtml(item.label)}</span>
+          <strong class="detail-value">${escapeHtml(item.value)}</strong>
+        </article>
+      `).join("")}
+    </div>
+  `;
+}
+
+function renderSlotCards(slotCompletion) {
+  return Object.entries(slotCompletion || {}).map(([slotName, info]) => {
+    const valueNotes = Object.entries(info.value_notes || {})
+      .map(([item, values]) => `${item}：${Array.isArray(values) ? values.join(" / ") : ""}`)
+      .join("；");
+    return `
+      <article class="slot-card">
+        <div class="slot-head">
+          <span>${escapeHtml(slotName)}</span>
+          <span>${formatPercent(info.completion_ratio)}</span>
+        </div>
+        <div class="slot-bar"><div class="slot-fill" style="width: ${formatPercent(info.completion_ratio)}"></div></div>
+        <p class="slot-meta">已蒐集：${escapeHtml((info.filled_items || []).join("、") || "尚未蒐集")}</p>
+        <p class="slot-notes">${escapeHtml(valueNotes || "尚無值摘要")}</p>
+      </article>
+    `;
+  }).join("");
+}
+
+function maskSecret(value) {
+  const text = String(value || "");
+  if (!text) return "未提供";
+  if (text.length <= 4) return "已設定";
+  return `${text.slice(0, 2)}••••${text.slice(-2)}`;
+}
+
+function renderPersonaSection(persona, extraClass = "") {
   const child = persona.child || {};
   const elder = persona.elder || {};
   const relationship = persona.relationship || {};
   return `
-    <section class="dashboard-card">
+    <section class="${`dashboard-card ${extraClass}`.trim()}">
       <p class="section-label">Persona Context</p>
       <h2>家庭關係畫像</h2>
       <div class="slot-stack">
@@ -539,36 +591,12 @@ function renderSummarySection(summary, payload) {
     { label: "提醒", value: (summary.concerns || []).length ? `${summary.concerns.length} 項` : "無" },
   ];
 
-  const slotCards = Object.entries(summary.slot_completion || {}).map(([slotName, info]) => {
-    const valueNotes = Object.entries(info.value_notes || {})
-      .map(([item, values]) => `${item}：${Array.isArray(values) ? values.join(" / ") : ""}`)
-      .join("；");
-    return `
-      <article class="slot-card">
-        <div class="slot-head">
-          <span>${escapeHtml(slotName)}</span>
-          <span>${formatPercent(info.completion_ratio)}</span>
-        </div>
-        <div class="slot-bar"><div class="slot-fill" style="width: ${formatPercent(info.completion_ratio)}"></div></div>
-        <p class="slot-meta">已蒐集：${escapeHtml((info.filled_items || []).join("、") || "尚未蒐集")}</p>
-        <p class="slot-notes">${escapeHtml(valueNotes || "尚無值摘要")}</p>
-      </article>
-    `;
-  }).join("");
-
   return `
     <aside class="dashboard">
       <section class="dashboard-card">
         <p class="section-label">Session Snapshot</p>
         <h2>互動摘要</h2>
-        <div class="summary-grid">
-          ${cards.map((item) => `
-            <article class="summary-item">
-              <strong>${escapeHtml(item.value)}</strong>
-              <span>${escapeHtml(item.label)}</span>
-            </article>
-          `).join("")}
-        </div>
+        ${renderMetricGrid(cards)}
       </section>
 
       ${renderPersonaSection(payload.persona_profile || {})}
@@ -590,7 +618,7 @@ function renderSummarySection(summary, payload) {
       <section class="dashboard-card">
         <p class="section-label">Slot Progress</p>
         <h2>四大槽位進度</h2>
-        <div class="slot-stack">${slotCards}</div>
+        <div class="slot-stack">${renderSlotCards(summary.slot_completion || {})}</div>
       </section>
 
       <section class="dashboard-card">
@@ -685,11 +713,125 @@ function renderReportRecordList(records) {
   `).join("");
 }
 
+function renderReportAnalysisCard(summary, payload) {
+  const analysis = payload.latest_analysis || {};
+  const generation = analysis.generation || {};
+  const slotCandidates = Array.isArray(analysis.slot_candidates) ? analysis.slot_candidates : [];
+  const replyStyle = Array.isArray(analysis.reply_style) ? analysis.reply_style : [];
+  const insightItems = [
+    { label: "分析狀態", value: analysis.status || (payload.background_processing ? "背景分析中" : "已完成") },
+    { label: "最新情緒", value: summary.latest_emotion?.label || "尚未分析" },
+    { label: "情緒強度", value: formatMetric(summary.latest_emotion?.intensity) },
+    { label: "建議焦點", value: analysis.recommended_focus || summary.next_focus_slots?.[0] || "尚未指定" },
+    { label: "偏離判定", value: analysis.deviation_level ?? "未提供" },
+    { label: "轉場判定", value: analysis.should_transition === true ? "建議切換" : analysis.should_transition === false ? "維持目前腳本" : "未提供" },
+    { label: "分析模型", value: analysis.model_label || payload.llm_status?.analysis?.model || "未啟用" },
+    { label: "生成模型", value: generation.model_label || payload.llm_status?.generation?.model || "未啟用" },
+  ];
+
+  return `
+    <section class="dashboard-card report-card report-card--eight">
+      <p class="section-label">Analysis Insight</p>
+      <h2>分析結果</h2>
+      ${renderDetailGrid(insightItems)}
+      <p class="analysis-note">${escapeHtml(analysis.summary || summary.latest_analysis_summary || "背景分析尚未完成。")}</p>
+      <h3 class="subheading">偏離原因</h3>
+      <p class="analysis-note">${escapeHtml(analysis.deviation_reason || "目前沒有額外偏離說明。")}</p>
+      <h3 class="subheading">LLM 填槽候選</h3>
+      <div class="chip-list">
+        ${slotCandidates.length
+          ? slotCandidates.map((candidate) => `<span class="chip is-muted">${escapeHtml(`${candidate.slot} / ${candidate.item}${candidate.value ? `：${candidate.value}` : ""}`)}</span>`).join("")
+          : '<span class="chip is-muted">尚未產生填槽候選</span>'}
+      </div>
+      <h3 class="subheading">回覆風格提示</h3>
+      <div class="chip-list">
+        ${replyStyle.length
+          ? replyStyle.map((item) => `<span class="chip is-muted">${escapeHtml(item)}</span>`).join("")
+          : '<span class="chip is-muted">目前未提供額外風格提示</span>'}
+      </div>
+    </section>
+  `;
+}
+
+function renderReportTurnCards(turns) {
+  return turns.slice().reverse().map((turn) => {
+    const extracted = Object.entries(turn.extracted_slots || {}).flatMap(([slotName, items]) => {
+      if (!Array.isArray(items)) return [];
+      return items.map((item) => `${slotName}：${item}`);
+    });
+    const concerns = Array.isArray(turn.llm_concerns) ? turn.llm_concerns : [];
+    return `
+      <article class="turn-card">
+        <div class="turn-card-head">
+          <div>
+            <span class="timeline-step">Turn ${escapeHtml(turn.turn)}</span>
+            <strong>${escapeHtml(turn.target_slot || "未指定槽位")}</strong>
+          </div>
+          <div class="turn-meta-row">
+            <span class="bubble-tag">相似度 ${escapeHtml(formatMetric(turn.similarity))}</span>
+            <span class="bubble-tag">偏離 ${escapeHtml(turn.deviation_level)}</span>
+            <span class="bubble-tag">${escapeHtml(turn.emotion_label || "未分析")}</span>
+            <span class="bubble-tag">${turn.generated_by_llm ? "LLM 生成" : "參考語句"}</span>
+          </div>
+        </div>
+        <div class="turn-message-grid">
+          <article class="message-card">
+            <span class="message-label">虛擬兒女</span>
+            <p>${escapeHtml(turn.assistant_message || "尚無訊息")}</p>
+          </article>
+          <article class="message-card is-elder">
+            <span class="message-label">長者回覆</span>
+            <p>${escapeHtml(turn.elder_message || "尚無訊息")}</p>
+          </article>
+        </div>
+        <div class="turn-insight-grid">
+          <article class="mini-note-card">
+            <span class="mini-note-label">LLM 摘要</span>
+            <p>${escapeHtml(turn.llm_analysis_summary || "尚未產生分析摘要")}</p>
+          </article>
+          <article class="mini-note-card">
+            <span class="mini-note-label">抽取槽位</span>
+            <div class="chip-list">
+              ${extracted.length
+                ? extracted.map((item) => `<span class="chip is-muted">${escapeHtml(item)}</span>`).join("")
+                : '<span class="chip is-muted">尚未抽取到槽位</span>'}
+            </div>
+          </article>
+        </div>
+        <div class="chip-list">
+          ${concerns.length
+            ? concerns.map((item) => `<span class="chip is-warning">${escapeHtml(item)}</span>`).join("")
+            : '<span class="chip is-muted">本輪沒有新增照護提醒</span>'}
+        </div>
+      </article>
+    `;
+  }).join("");
+}
+
 function renderReportView() {
   const report = state.reportData || { records: [], latest_session: null };
   const payload = report.latest_session || getCurrentPayload();
   const summary = payload.summary || {};
   const turns = payload.turns || [];
+  const slotCompletion = summary.slot_completion || {};
+  const overviewCards = [
+    { label: "演算法", value: String(summary.algorithm || "dqn").toUpperCase() },
+    { label: "對話輪數", value: String(summary.total_turns || 0) },
+    { label: "平均相似度", value: formatMetric(summary.average_similarity) },
+    { label: "平均偏離", value: formatMetric(summary.average_deviation) },
+    { label: "轉場次數", value: String(summary.transitions_used || 0) },
+    { label: "最新情緒", value: summary.latest_emotion?.label || "尚未分析" },
+    { label: "提醒數量", value: String((summary.concerns || []).length) },
+    { label: "未完成槽位", value: String((summary.next_focus_slots || []).length) },
+  ];
+  const systemItems = [
+    { label: "家庭畫像", value: payload.persona_profile?.label || "尚未選擇" },
+    { label: "腳本檔案", value: summary.script_file || "未提供" },
+    { label: "模型路徑", value: summary.model_path || "未提供" },
+    { label: "分析模式", value: payload.background_processing ? "背景補分析" : (payload.llm_status?.mode || "即時") },
+    { label: "分析 preset", value: payload.llm_status?.analysis?.preset || "未啟用" },
+    { label: "生成 preset", value: payload.llm_status?.generation?.preset || "未啟用" },
+  ];
   return `
     <section class="hero module-hero">
       <div class="hero-copy">
@@ -707,41 +849,83 @@ function renderReportView() {
     </section>
 
     <div class="report-layout">
-      <section class="dashboard-card">
+      <section class="dashboard-card report-card report-card--wide">
         <p class="section-label">Latest Summary</p>
         <h2>最新互動概況</h2>
-        <div class="summary-grid">
-          <article class="summary-item"><strong>${escapeHtml(String(summary.total_turns || 0))}</strong><span>對話輪數</span></article>
-          <article class="summary-item"><strong>${escapeHtml(formatPercent(summary.slot_completion?.用藥狀況?.completion_ratio || 0))}</strong><span>用藥進度</span></article>
-          <article class="summary-item"><strong>${escapeHtml(formatPercent(summary.slot_completion?.睡眠狀態?.completion_ratio || 0))}</strong><span>睡眠進度</span></article>
-          <article class="summary-item"><strong>${escapeHtml(formatPercent(summary.slot_completion?.作息活動?.completion_ratio || 0))}</strong><span>作息進度</span></article>
-          <article class="summary-item"><strong>${escapeHtml(formatPercent(summary.slot_completion?.飲食狀況?.completion_ratio || 0))}</strong><span>飲食進度</span></article>
-          <article class="summary-item"><strong>${escapeHtml(summary.latest_emotion?.label || "尚未分析")}</strong><span>最新情緒</span></article>
-        </div>
+        ${renderMetricGrid(overviewCards, "report-overview-grid")}
       </section>
 
-      <section class="dashboard-card">
+      <section class="dashboard-card report-card report-card--six">
         <p class="section-label">History</p>
         <h2>家族對話紀錄</h2>
         <div class="report-record-list">${renderReportRecordList(report.records || []) || '<p class="panel-text">目前還沒有歷史紀錄。</p>'}</div>
       </section>
 
-      <section class="dashboard-card">
+      <section class="dashboard-card report-card report-card--six">
+        <p class="section-label">Interaction Summary</p>
+        <h2>互動摘要</h2>
+        ${renderDetailGrid(systemItems)}
+      </section>
+
+      ${renderReportAnalysisCard(summary, payload)}
+
+      ${renderPersonaSection(payload.persona_profile || {}, "report-card report-card--four")}
+
+      <section class="dashboard-card report-card report-card--six">
+        <p class="section-label">Slot Progress</p>
+        <h2>四大槽位進度</h2>
+        <div class="slot-stack">${renderSlotCards(slotCompletion)}</div>
+      </section>
+
+      <section class="dashboard-card report-card report-card--six">
+        <p class="section-label">Care Alerts</p>
+        <h2>照護提醒</h2>
+        <div class="chip-list">
+          ${(summary.concerns || []).length
+            ? summary.concerns.map((item) => `<span class="chip is-warning">${escapeHtml(item)}</span>`).join("")
+            : '<span class="chip is-muted">目前沒有高風險提醒</span>'}
+        </div>
+        <h3 class="subheading">下一步建議焦點</h3>
+        <div class="chip-list">
+          ${(summary.next_focus_slots || []).length
+            ? summary.next_focus_slots.map((item) => `<span class="chip is-muted">${escapeHtml(item)}</span>`).join("")
+            : '<span class="chip is-muted">目前四大槽位皆已有資料</span>'}
+        </div>
+      </section>
+
+      <section class="dashboard-card report-card report-card--wide">
+        <p class="section-label">Caregiver Summary</p>
+        <h2>家屬摘要</h2>
+        <pre class="summary-markdown">${escapeHtml(payload.summary_markdown || "尚未產生家屬摘要。")}</pre>
+      </section>
+
+      <section class="dashboard-card report-card report-card--wide">
         <p class="section-label">Conversation Timeline</p>
         <h2>最近對話節點</h2>
         <div class="timeline-list">
-          ${turns.slice(-8).map((turn) => `
+          ${turns.slice(-8).reverse().map((turn) => `
             <article class="timeline-item">
-              <span class="timeline-step">Turn ${escapeHtml(turn.turn)}</span>
-              <strong>${escapeHtml(turn.target_slot)}</strong>
-              <p>${escapeHtml(turn.elder_message)}</p>
+              <div class="turn-card-head">
+                <div>
+                  <span class="timeline-step">Turn ${escapeHtml(turn.turn)}</span>
+                  <strong>${escapeHtml(turn.target_slot || "未指定槽位")}</strong>
+                </div>
+                <div class="turn-meta-row">
+                  <span class="bubble-tag">相似度 ${escapeHtml(formatMetric(turn.similarity))}</span>
+                  <span class="bubble-tag">偏離 ${escapeHtml(turn.deviation_level)}</span>
+                </div>
+              </div>
+              <p>${escapeHtml(turn.elder_message || "尚無內容")}</p>
             </article>
           `).join("") || '<p class="panel-text">尚未開始對話。</p>'}
         </div>
       </section>
 
-      ${renderPersonaSection(payload.persona_profile || {})}
-      ${renderSummarySection(summary, payload)}
+      <section class="dashboard-card report-card report-card--wide">
+        <p class="section-label">Conversation Transcript</p>
+        <h2>完整對話紀錄</h2>
+        <div class="turn-feed">${renderReportTurnCards(turns) || '<p class="panel-text">尚未開始對話。</p>'}</div>
+      </section>
     </div>
   `;
 }
@@ -798,6 +982,46 @@ function renderUserTableRows(users) {
   `).join("");
 }
 
+function renderApiPresetCards(apiSettings) {
+  const presets = Object.entries(apiSettings.model_overrides || {});
+  if (!presets.length) {
+    return '<p class="panel-text">目前沒有可用的模型 preset。</p>';
+  }
+
+  return `
+    <div class="api-preset-grid">
+      ${presets.map(([presetName, preset]) => {
+        const tags = [];
+        if (apiSettings.default_analysis_preset === presetName) tags.push("預設分析");
+        if (apiSettings.default_generation_preset === presetName) tags.push("預設生成");
+        return `
+          <article class="api-preset-card">
+            <div class="api-preset-head">
+              <div>
+                <span class="highlight-kicker">Model Preset</span>
+                <strong>${escapeHtml(presetName)}</strong>
+              </div>
+              <div class="chip-list">
+                ${tags.length
+                  ? tags.map((tag) => `<span class="chip is-muted">${escapeHtml(tag)}</span>`).join("")
+                  : '<span class="chip is-muted">可切換 preset</span>'}
+              </div>
+            </div>
+            ${renderDetailGrid([
+              { label: "Provider", value: preset.provider || "未提供" },
+              { label: "Model", value: preset.model || "未提供" },
+              { label: "Base URL", value: preset.base_url || "未提供" },
+              { label: "API Key", value: maskSecret(preset.api_key) },
+              { label: "Temperature", value: preset.temperature ?? "未提供" },
+              { label: "Timeout", value: preset.timeout ? `${preset.timeout}s` : "未提供" },
+            ], "detail-grid compact")}
+          </article>
+        `;
+      }).join("")}
+    </div>
+  `;
+}
+
 function renderAdminView() {
   const adminData = state.adminData || { users: [], personas: {}, prompt_settings: {}, api_settings: {}, conversation_records: [] };
   const personaOptions = Object.keys(adminData.personas || {}).map((profileId) => `
@@ -825,7 +1049,7 @@ function renderAdminView() {
     </section>
 
     <div class="admin-grid">
-      <section class="dashboard-card">
+      <section class="dashboard-card admin-card admin-card--half">
         <p class="section-label">Persona Manager</p>
         <h2>畫像調整 / 上傳</h2>
         <label class="field">
@@ -846,7 +1070,7 @@ function renderAdminView() {
         <button class="ghost-button" data-action="import-personas">批次匯入</button>
       </section>
 
-      <section class="dashboard-card">
+      <section class="dashboard-card admin-card admin-card--half">
         <p class="section-label">Prompt Manager</p>
         <h2>提示詞調整</h2>
         <label class="field"><span>分析附加提示</span><textarea id="prompt-analysis" class="text-area">${escapeHtml(promptSettings.analysis_appendix || "")}</textarea></label>
@@ -855,7 +1079,7 @@ function renderAdminView() {
         <button class="send-button" data-action="save-prompts">儲存提示詞</button>
       </section>
 
-      <section class="dashboard-card">
+      <section class="dashboard-card admin-card admin-card--wide">
         <p class="section-label">User Manager</p>
         <h2>帳號密碼與用戶管理</h2>
         <form id="admin-user-form" class="admin-form">
@@ -902,7 +1126,7 @@ function renderAdminView() {
         </div>
       </section>
 
-      <section class="dashboard-card">
+      <section class="dashboard-card admin-card admin-card--half">
         <p class="section-label">Conversation Records</p>
         <h2>對話紀錄管理</h2>
         <div class="record-stack">
@@ -919,13 +1143,25 @@ function renderAdminView() {
         </div>
       </section>
 
-      <section class="dashboard-card">
+      <section class="dashboard-card admin-card admin-card--wide">
         <p class="section-label">API Manager</p>
         <h2>API 與模型設定</h2>
-        <label class="field"><span>預設演算法</span><select id="api-default-algorithm"><option value="dqn"${apiSettings.default_algorithm === "dqn" ? " selected" : ""}>dqn</option><option value="q_learning"${apiSettings.default_algorithm === "q_learning" ? " selected" : ""}>q_learning</option></select></label>
-        <label class="field"><span>預設分析模型</span><input id="api-default-analysis" class="text-input" value="${escapeHtml(apiSettings.default_analysis_preset || "")}" /></label>
-        <label class="field"><span>預設生成模型</span><input id="api-default-generation" class="text-input" value="${escapeHtml(apiSettings.default_generation_preset || "")}" /></label>
-        <label class="field"><span>模型覆寫 JSON</span><textarea id="api-model-overrides" class="text-area tall">${escapeHtml(JSON.stringify(apiSettings.model_overrides || {}, null, 2))}</textarea></label>
+        <p class="panel-text">目前有 ${escapeHtml(String(Object.keys(apiSettings.model_overrides || {}).length))} 組模型設定，會同時支援分析模型與生成模型的預設切換。</p>
+        <div class="api-summary-strip">
+          ${renderMetricGrid([
+            { label: "預設演算法", value: apiSettings.default_algorithm || "dqn" },
+            { label: "預設分析", value: apiSettings.default_analysis_preset || "未提供" },
+            { label: "預設生成", value: apiSettings.default_generation_preset || "未提供" },
+            { label: "模型組數", value: String(Object.keys(apiSettings.model_overrides || {}).length) },
+          ], "api-overview-grid")}
+        </div>
+        ${renderApiPresetCards(apiSettings)}
+        <div class="admin-form-grid">
+          <label class="field"><span>預設演算法</span><select id="api-default-algorithm"><option value="dqn"${apiSettings.default_algorithm === "dqn" ? " selected" : ""}>dqn</option><option value="q_learning"${apiSettings.default_algorithm === "q_learning" ? " selected" : ""}>q_learning</option></select></label>
+          <label class="field"><span>預設分析模型</span><input id="api-default-analysis" class="text-input" value="${escapeHtml(apiSettings.default_analysis_preset || "")}" /></label>
+          <label class="field"><span>預設生成模型</span><input id="api-default-generation" class="text-input" value="${escapeHtml(apiSettings.default_generation_preset || "")}" /></label>
+        </div>
+        <label class="field"><span>模型覆寫 JSON</span><textarea id="api-model-overrides" class="text-area tall code-area">${escapeHtml(JSON.stringify(apiSettings.model_overrides || {}, null, 2))}</textarea></label>
         <button class="send-button" data-action="save-api-settings">儲存 API 設定</button>
       </section>
     </div>
