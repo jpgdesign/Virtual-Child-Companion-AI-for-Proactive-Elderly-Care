@@ -5,3 +5,4 @@ __pycache__/
 venv/
 outputs_*_smoke/
 專案說明/
+artifacts/platform_state.json
