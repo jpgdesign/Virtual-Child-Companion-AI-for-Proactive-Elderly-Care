@@ -12,6 +12,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from llm_runtime import DEFAULT_ANALYSIS_PRESET, DEFAULT_GENERATION_PRESET
+from persona_profiles import DEFAULT_PERSONA_PROFILE_ID
 from virtual_child_rl_system import VirtualChildRLSystem, normalize_algorithm
 
 
@@ -30,12 +31,14 @@ def create_system(
     llm_enabled: bool = True,
     analysis_preset: str = DEFAULT_ANALYSIS_PRESET,
     generation_preset: str = DEFAULT_GENERATION_PRESET,
+    persona_profile_id: str = DEFAULT_PERSONA_PROFILE_ID,
 ) -> VirtualChildRLSystem:
     return VirtualChildRLSystem(
         algorithm=normalize_algorithm(algorithm),
         llm_enabled=llm_enabled,
         analysis_preset=analysis_preset,
         generation_preset=generation_preset,
+        persona_profile_id=persona_profile_id,
     )
 
 
@@ -45,12 +48,14 @@ def create_session(
     llm_enabled: bool = True,
     analysis_preset: str = DEFAULT_ANALYSIS_PRESET,
     generation_preset: str = DEFAULT_GENERATION_PRESET,
+    persona_profile_id: str = DEFAULT_PERSONA_PROFILE_ID,
 ) -> tuple[str, VirtualChildRLSystem, str]:
     system = create_system(
         algorithm,
         llm_enabled=llm_enabled,
         analysis_preset=analysis_preset,
         generation_preset=generation_preset,
+        persona_profile_id=persona_profile_id,
     )
     opening_message = system.start_session()
     session_id = uuid.uuid4().hex
@@ -86,6 +91,7 @@ class CareCompanionHandler(BaseHTTPRequestHandler):
                 llm_enabled=bool(payload.get("llm_enabled", True)),
                 analysis_preset=str(payload.get("analysis_preset", DEFAULT_ANALYSIS_PRESET)),
                 generation_preset=str(payload.get("generation_preset", DEFAULT_GENERATION_PRESET)),
+                persona_profile_id=str(payload.get("persona_profile_id", DEFAULT_PERSONA_PROFILE_ID)),
             )
             self._send_json(serialize_session(session_id, system, opening_message))
             return
@@ -97,6 +103,7 @@ class CareCompanionHandler(BaseHTTPRequestHandler):
                 llm_enabled=bool(payload.get("llm_enabled", True)),
                 analysis_preset=str(payload.get("analysis_preset", DEFAULT_ANALYSIS_PRESET)),
                 generation_preset=str(payload.get("generation_preset", DEFAULT_GENERATION_PRESET)),
+                persona_profile_id=str(payload.get("persona_profile_id", DEFAULT_PERSONA_PROFILE_ID)),
             )
             self._send_json(serialize_session(session_id, system, opening_message))
             return

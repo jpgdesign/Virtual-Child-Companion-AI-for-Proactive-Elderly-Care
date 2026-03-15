@@ -68,6 +68,11 @@
               <select id="generation-preset-select"></select>
             </label>
 
+            <label class="field" for="persona-profile-select">
+              <span>家庭畫像</span>
+              <select id="persona-profile-select"></select>
+            </label>
+
             <label class="toggle-field" for="llm-enabled-checkbox">
               <span>LLM 混合模式</span>
               <input id="llm-enabled-checkbox" class="toggle-input" type="checkbox" checked>
@@ -112,6 +117,12 @@
           <h2>互動摘要</h2>
           <div id="summary-cards" class="summary-grid"></div>
           <div id="llm-overview" class="llm-overview"></div>
+        </section>
+
+        <section class="dashboard-card">
+          <p class="section-label">Persona Context</p>
+          <h2>家庭關係畫像</h2>
+          <div id="persona-panel" class="slot-stack"></div>
         </section>
 
         <section class="dashboard-card">

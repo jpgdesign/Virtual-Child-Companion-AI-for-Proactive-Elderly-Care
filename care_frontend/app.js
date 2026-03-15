@@ -9,6 +9,21 @@ const fallbackPresets = {
   },
 };
 
+const fallbackPersonaProfiles = {
+  daughter_teacher_mother: {
+    label: "長女曉雯與母親玉蘭",
+    family_mapping: "曉雯是玉蘭的長女，玉蘭是曉雯的母親。",
+  },
+  son_engineer_father: {
+    label: "次子家豪與父親正雄",
+    family_mapping: "家豪是正雄的次子，正雄是家豪的父親。",
+  },
+  daughter_nurse_mother: {
+    label: "小女兒雅婷與母親秀琴",
+    family_mapping: "雅婷是秀琴的小女兒，秀琴是雅婷的母親。",
+  },
+};
+
 const state = {
   sessionId: null,
   algorithm: "dqn",
@@ -16,6 +31,8 @@ const state = {
   analysisPreset: "qwen35_lmstudio",
   generationPreset: "qwen35_lmstudio",
   availablePresets: { ...fallbackPresets },
+  personaProfileId: "daughter_teacher_mother",
+  availablePersonaProfiles: { ...fallbackPersonaProfiles },
   speechEnabled: true,
   recognition: null,
   listening: false,
@@ -28,6 +45,7 @@ const elements = {
   algorithmSelect: document.getElementById("algorithm-select"),
   analysisPresetSelect: document.getElementById("analysis-preset-select"),
   generationPresetSelect: document.getElementById("generation-preset-select"),
+  personaProfileSelect: document.getElementById("persona-profile-select"),
   llmEnabledCheckbox: document.getElementById("llm-enabled-checkbox"),
   composerForm: document.getElementById("composer-form"),
   resetButton: document.getElementById("reset-button"),
@@ -46,6 +64,7 @@ const elements = {
   concernList: document.getElementById("concern-list"),
   focusList: document.getElementById("focus-list"),
   summaryMarkdown: document.getElementById("summary-markdown"),
+  personaPanel: document.getElementById("persona-panel"),
 };
 
 async function requestJson(url, payload = {}) {
@@ -91,6 +110,19 @@ function getPresetLabel(presetId) {
   return preset.model;
 }
 
+function getPersonaLabel(personaProfileId) {
+  const persona = state.availablePersonaProfiles[personaProfileId] || fallbackPersonaProfiles[personaProfileId];
+  if (!persona) {
+    return personaProfileId;
+  }
+  return persona.label;
+}
+
+function getAssistantDisplayName() {
+  const child = state.lastPayload?.persona_profile?.child || {};
+  return child.name || "虛擬兒女";
+}
+
 function getVoiceModeLabel() {
   if (state.listening) {
     return "收音中";
@@ -132,7 +164,7 @@ function createBubble(role, text, tags = []) {
 
   const roleChip = document.createElement("span");
   roleChip.className = "bubble-tag";
-  roleChip.textContent = role === "assistant" ? "系統回覆" : "長者回覆";
+  roleChip.textContent = role === "assistant" ? getAssistantDisplayName() : "長者回覆";
   meta.appendChild(roleChip);
 
   tags.filter(Boolean).forEach((tag) => {
@@ -289,11 +321,59 @@ function renderEmotionPanel(summary, payload) {
     analysis.summary || summary.latest_analysis_summary || "背景分析尚未完成。";
 }
 
+function renderPersonaPanel(summary, payload) {
+  const persona = payload?.persona_profile || summary?.persona_profile || {};
+  const child = persona.child || {};
+  const elder = persona.elder || {};
+  const relationship = persona.relationship || {};
+
+  const sections = [
+    {
+      title: persona.label || getPersonaLabel(state.personaProfileId),
+      body: relationship.family_mapping || "尚未選擇家庭畫像",
+    },
+    {
+      title: `虛擬兒女：${child.name || "-"}`,
+      body: [
+        child.role_detail || child.role || "",
+        child.occupation || "",
+        Array.isArray(child.personality) ? child.personality.slice(0, 3).join("、") : "",
+      ].filter(Boolean).join("｜"),
+    },
+    {
+      title: `長者：${elder.name || "-"}`,
+      body: [
+        elder.role || "",
+        elder.living_status || "",
+        Array.isArray(elder.health_notes) ? elder.health_notes.slice(0, 3).join("、") : "",
+      ].filter(Boolean).join("｜"),
+    },
+    {
+      title: "互動準則",
+      body: relationship.guidance_style || relationship.dynamic || "先接住話題，再慢慢引導。",
+    },
+  ];
+
+  elements.personaPanel.innerHTML = "";
+  sections.forEach((section) => {
+    const card = document.createElement("article");
+    card.className = "slot-card";
+    card.innerHTML = `
+      <div class="slot-head">
+        <span>${section.title}</span>
+      </div>
+      <p class="slot-notes">${section.body || "尚無資料"}</p>
+    `;
+    elements.personaPanel.appendChild(card);
+  });
+}
+
 function renderSummary(summary, payload) {
   const safeSummary = summary || {};
 
   elements.summaryCards.innerHTML = "";
   const cards = [
+    { label: "家庭畫像", value: payload?.persona_profile?.label || getPersonaLabel(state.personaProfileId) },
     { label: "演算法", value: toAlgorithmLabel(safeSummary.algorithm || state.algorithm) },
     { label: "對話輪數", value: String(safeSummary.total_turns || 0) },
     { label: "平均相似度", value: formatMetric(safeSummary.average_similarity) },
@@ -310,6 +390,7 @@ function renderSummary(summary, payload) {
 
   renderLLMOverview(safeSummary, payload);
   renderEmotionPanel(safeSummary, payload);
+  renderPersonaPanel(safeSummary, payload);
 
   elements.slotProgress.innerHTML = "";
   const slotCompletion = safeSummary.slot_completion || {};
@@ -369,6 +450,9 @@ function syncPresetState(payload) {
   if (payload?.available_model_presets) {
     state.availablePresets = payload.available_model_presets;
   }
+  if (payload?.available_persona_profiles) {
+    state.availablePersonaProfiles = payload.available_persona_profiles;
+  }
   if (payload?.llm_status?.analysis?.preset) {
     state.analysisPreset = payload.llm_status.analysis.preset;
   }
@@ -378,7 +462,11 @@ function syncPresetState(payload) {
   if (payload?.llm_status?.enabled !== undefined) {
     state.llmEnabled = Boolean(payload.llm_status.enabled);
   }
+  if (payload?.persona_profile_id) {
+    state.personaProfileId = payload.persona_profile_id;
+  }
   populatePresetOptions();
+  populatePersonaOptions();
 }
 
 function populatePresetOptions() {
@@ -393,12 +481,22 @@ function populatePresetOptions() {
   elements.llmEnabledCheckbox.checked = state.llmEnabled;
 }
 
+function populatePersonaOptions() {
+  const personas = state.availablePersonaProfiles || fallbackPersonaProfiles;
+  const optionsHtml = Object.keys(personas)
+    .map((key) => `<option value="${key}">${getPersonaLabel(key)}</option>`)
+    .join("");
+  elements.personaProfileSelect.innerHTML = optionsHtml;
+  elements.personaProfileSelect.value = state.personaProfileId;
+}
+
 function buildSessionConfig() {
   return {
     algorithm: state.algorithm,
     llm_enabled: state.llmEnabled,
     analysis_preset: state.analysisPreset,
     generation_preset: state.generationPreset,
+    persona_profile_id: state.personaProfileId,
   };
 }
 
@@ -563,6 +661,7 @@ async function handleConfigChange() {
   state.algorithm = elements.algorithmSelect.value;
   state.analysisPreset = elements.analysisPresetSelect.value;
   state.generationPreset = elements.generationPresetSelect.value;
+  state.personaProfileId = elements.personaProfileSelect.value;
   state.llmEnabled = elements.llmEnabledCheckbox.checked;
   if (state.sessionId) {
     await resetSession();
@@ -585,6 +684,7 @@ function bindEvents() {
   elements.algorithmSelect.addEventListener("change", handleConfigChange);
   elements.analysisPresetSelect.addEventListener("change", handleConfigChange);
   elements.generationPresetSelect.addEventListener("change", handleConfigChange);
+  elements.personaProfileSelect.addEventListener("change", handleConfigChange);
   elements.llmEnabledCheckbox.addEventListener("change", handleConfigChange);
   elements.resetButton.addEventListener("click", resetSession);
   elements.listenButton.addEventListener("click", handleListen);
@@ -593,6 +693,7 @@ function bindEvents() {
 
 async function init() {
   populatePresetOptions();
+  populatePersonaOptions();
   elements.algorithmSelect.value = state.algorithm;
   bindEvents();
   initSpeechRecognition();

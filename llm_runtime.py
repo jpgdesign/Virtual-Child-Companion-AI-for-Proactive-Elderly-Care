@@ -319,6 +319,7 @@ class HybridLLMOrchestrator:
     def analyze_and_generate_turn(
         self,
         *,
+        persona_context: Dict[str, Any],
         elder_message: str,
         current_script: Dict[str, Any],
         current_step: Dict[str, Any],
@@ -343,11 +344,13 @@ class HybridLLMOrchestrator:
             "The reply must be in Traditional Chinese and 1 to 3 sentences. "
             "The reply must briefly acknowledge the elder's latest topic before gently steering back to current_target_slot. "
             "Do not switch topics abruptly. "
+            "Stay fully consistent with persona_context, family relationship, preferred address, and speaking habits. "
             "Follow current_target_slot strictly. "
             "Use pending_items to guide the next follow-up naturally."
         )
         user_payload = {
             "task": "analyze_and_generate",
+            "persona_context": persona_context,
             "elder_message": elder_message,
             "current_script": {
                 "script_id": current_script.get("script_id"),
@@ -403,6 +406,7 @@ class HybridLLMOrchestrator:
     def analyze_turn(
         self,
         *,
+        persona_context: Dict[str, Any],
         elder_message: str,
         current_script: Dict[str, Any],
         current_step: Dict[str, Any],
@@ -417,10 +421,12 @@ class HybridLLMOrchestrator:
         system_prompt = (
             "You analyze an older adult's reply for a care dialogue system. "
             "Return exactly one JSON object. No markdown. No think tags. "
-            "All natural-language fields must be in Traditional Chinese."
+            "All natural-language fields must be in Traditional Chinese. "
+            "Use persona_context to understand the family relationship and the elder's usual behavior."
         )
         user_payload = {
             "task": "analyze_elder_reply",
+            "persona_context": persona_context,
             "elder_message": elder_message,
             "current_script": {
                 "script_id": current_script.get("script_id"),
@@ -464,6 +470,7 @@ class HybridLLMOrchestrator:
     def generate_reply(
         self,
         *,
+        persona_context: Dict[str, Any],
         elder_message: str,
         selected_script: Dict[str, Any],
         reference_reply: str,
@@ -485,10 +492,12 @@ class HybridLLMOrchestrator:
             "First briefly acknowledge or paraphrase the older adult's latest topic. "
             "Then gently steer toward current_target_slot with a hidden bridge. "
             "Do not abruptly change topics or ignore the elder's message. "
+            "Stay in character with persona_context, including the child role, family relationship, preferred address, and speaking habits. "
             "Follow current_target_slot strictly and use pending_items."
         )
         user_payload = {
             "task": "generate_virtual_child_reply",
+            "persona_context": persona_context,
             "transition_mode": transition_mode,
             "elder_message": elder_message,
             "selected_script": {

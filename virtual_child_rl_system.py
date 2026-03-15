@@ -23,6 +23,11 @@ from llm_runtime import (
     build_endpoint_config,
     available_model_presets,
 )
+from persona_profiles import (
+    DEFAULT_PERSONA_PROFILE_ID,
+    available_persona_profiles,
+    get_persona_profile,
+)
 from tabular_q_learning import TabularQLearningAgent
 
 try:
@@ -198,6 +203,8 @@ class RuntimeSession:
     algorithm: str
     script_file: str
     model_path: str
+    persona_profile_id: str = DEFAULT_PERSONA_PROFILE_ID
+    persona_profile: Dict[str, Any] = field(default_factory=dict)
     turns: List[RuntimeTurn] = field(default_factory=list)
     filled_slots: Dict[str, List[str]] = field(default_factory=dict)
     slot_value_details: Dict[str, Dict[str, List[str]]] = field(default_factory=dict)
@@ -443,6 +450,7 @@ class VirtualChildRLSystem:
         llm_enabled: bool = True,
         analysis_preset: str = DEFAULT_ANALYSIS_PRESET,
         generation_preset: str = DEFAULT_GENERATION_PRESET,
+        persona_profile_id: str = DEFAULT_PERSONA_PROFILE_ID,
     ) -> None:
         self.script_file = script_file or find_latest_file("grandma_session_*/*/奶奶對話劇本_*.json")
         self.training_file = training_file or find_latest_file("rl_data_*.json")
@@ -472,10 +480,13 @@ class VirtualChildRLSystem:
                 generation_config=build_endpoint_config(generation_preset, fallback=DEFAULT_GENERATION_PRESET),
             )
             llm_status = self.llm.status_dict()
+        persona_profile = get_persona_profile(persona_profile_id)
         self.session = RuntimeSession(
             algorithm=self.policy.algorithm,
             script_file=str(self.script_file),
             model_path=str(self.policy.model_path),
+            persona_profile_id=persona_profile["id"],
+            persona_profile=persona_profile,
             llm_enabled=llm_enabled,
             llm_status=llm_status,
         )
@@ -517,15 +528,16 @@ class VirtualChildRLSystem:
 
     def start_session(self) -> str:
         if self.session.started:
-            return self.current_step["child_dialogue"]
+            return self.session.latest_assistant_message or self._apply_persona_voice(self.current_step["child_dialogue"], add_address=True)
 
         next_script = self._pick_next_script(self.build_state_vector(False))
         self.session.current_script_id = int(next_script["script_id"])
         self.session.current_step_index = 0
         self.session.started = True
         logger.info("Started session with script_id=%s target_slot=%s", next_script["script_id"], next_script["target_slot"])
-        self.session.latest_assistant_message = self.current_step["child_dialogue"]
-        return self.current_step["child_dialogue"]
+        opening_message = self._apply_persona_voice(self.current_step["child_dialogue"], add_address=True)
+        self.session.latest_assistant_message = opening_message
+        return opening_message
 
     @property
     def current_script(self) -> Dict[str, Any]:
@@ -534,6 +546,49 @@ class VirtualChildRLSystem:
     @property
     def current_step(self) -> Dict[str, Any]:
         return self.current_script["steps"][self.session.current_step_index]
+
+    @property
+    def persona_profile(self) -> Dict[str, Any]:
+        return self.session.persona_profile
+
+    def _preferred_elder_address(self) -> str:
+        child_profile = self.persona_profile.get("child", {})
+        return str(child_profile.get("preferred_elder_address", "")).strip()
+
+    def _apply_persona_voice(self, message: str, *, add_address: bool = False) -> str:
+        text = str(message or "").strip()
+        if not text:
+            return text
+        elder_address = self._preferred_elder_address()
+        if not elder_address:
+            return text
+        text = re.sub(
+            r"^(奶奶|阿嬤|阿媽|外婆|婆婆|媽媽|媽|爸爸|爸|伯父|伯母)[，、,:： ]*",
+            f"{elder_address}，",
+            text,
+            count=1,
+        )
+        if add_address and not text.startswith(elder_address):
+            return f"{elder_address}，{text}"
+        return text
+
+    def _persona_overview(self) -> Dict[str, Any]:
+        child = self.persona_profile.get("child", {})
+        elder = self.persona_profile.get("elder", {})
+        relationship = self.persona_profile.get("relationship", {})
+        return {
+            "id": self.session.persona_profile_id,
+            "label": self.persona_profile.get("label", self.session.persona_profile_id),
+            "child_name": child.get("name", ""),
+            "child_role": child.get("role", ""),
+            "child_role_detail": child.get("role_detail", ""),
+            "child_address": child.get("preferred_elder_address", ""),
+            "elder_name": elder.get("name", ""),
+            "elder_role": elder.get("role", ""),
+            "family_mapping": relationship.get("family_mapping", ""),
+            "dynamic": relationship.get("dynamic", ""),
+            "guidance_style": relationship.get("guidance_style", ""),
+        }
 
     def _recent_turn_context(self, limit: int = 4) -> List[Dict[str, Any]]:
         return [
@@ -705,6 +760,7 @@ class VirtualChildRLSystem:
 
         try:
             analysis = self.llm.analyze_turn(
+                persona_context=self.persona_profile,
                 elder_message=elder_message,
                 current_script=source_script,
                 current_step=source_step,
@@ -717,6 +773,7 @@ class VirtualChildRLSystem:
                 ranked_candidates=ranked_candidates,
             )
             generation = self.llm.generate_reply(
+                persona_context=self.persona_profile,
                 elder_message=elder_message,
                 selected_script=selected_script,
                 reference_reply=reference_reply,
@@ -745,6 +802,7 @@ class VirtualChildRLSystem:
                 self.session.latest_analysis = analysis.to_dict()
                 self.session.latest_analysis["status"] = "completed"
                 refined_reply = self._blend_generated_reply(elder_message, fast_reply_hint, generation.reply)
+                refined_reply = self._apply_persona_voice(refined_reply, add_address=True)
                 generation_dict = generation.to_dict()
                 generation_dict["reply"] = refined_reply
                 self.session.latest_analysis["generation"] = generation_dict
@@ -787,7 +845,7 @@ class VirtualChildRLSystem:
                 "expected_grandma_response": self.current_step["expected_grandma_response"],
             }
             expected = source_step["expected_grandma_response"]
-            assistant_message = source_step["child_dialogue"]
+            assistant_message = self._apply_persona_voice(source_step["child_dialogue"], add_address=True)
             similarity = self.similarity.score(expected, elder_message)
             rule_deviation = self.similarity.deviation_level(similarity)
             extracted_slots = self.extractor.extract(elder_message)
@@ -827,6 +885,8 @@ class VirtualChildRLSystem:
                 reference_reply = None if target_slot_complete else self._advance_within_script()
                 if reference_reply is None:
                     reference_reply = self._switch_script(current_state, prefer_new=target_slot_complete)
+            if reference_reply:
+                reference_reply = self._apply_persona_voice(reference_reply, add_address=True)
 
             current_target_slot = self.current_script["target_slot"]
             fast_reply = self._build_fast_reply(
@@ -835,6 +895,7 @@ class VirtualChildRLSystem:
                 reference_reply or "",
                 extracted_slots,
             )
+            fast_reply = self._apply_persona_voice(fast_reply, add_address=True)
             self.session.latest_assistant_message = fast_reply
 
             ranked_candidates = self._ranked_candidate_context(current_state)
@@ -923,7 +984,7 @@ class VirtualChildRLSystem:
             self.start_session()
 
         expected = self.current_step["expected_grandma_response"]
-        assistant_message = self.current_step["child_dialogue"]
+        assistant_message = self._apply_persona_voice(self.current_step["child_dialogue"], add_address=True)
         similarity = self.similarity.score(expected, elder_message)
         rule_deviation = self.similarity.deviation_level(similarity)
         extracted_slots = self.extractor.extract(elder_message)
@@ -962,6 +1023,8 @@ class VirtualChildRLSystem:
             next_message = None if target_slot_complete else self._advance_within_script()
             if next_message is None:
                 next_message = self._switch_script(current_state, prefer_new=target_slot_complete)
+        if next_message:
+            next_message = self._apply_persona_voice(next_message, add_address=True)
 
         analysis = LLMAnalysisResult()
         self.session.latest_emotion = {
@@ -982,6 +1045,7 @@ class VirtualChildRLSystem:
             try:
                 if self.llm.use_fused_turns:
                     analysis, generation = self.llm.analyze_and_generate_turn(
+                        persona_context=self.persona_profile,
                         elder_message=elder_message,
                         current_script=self.scripts_by_id[turn.script_id],
                         current_step={
@@ -1003,6 +1067,7 @@ class VirtualChildRLSystem:
                     )
                 else:
                     analysis = self.llm.analyze_turn(
+                        persona_context=self.persona_profile,
                         elder_message=elder_message,
                         current_script=self.scripts_by_id[turn.script_id],
                         current_step={
@@ -1018,9 +1083,11 @@ class VirtualChildRLSystem:
                         ranked_candidates=ranked_candidates_after,
                     )
                     generation = self.llm.generate_reply(
+                        persona_context=self.persona_profile,
                         elder_message=elder_message,
                         selected_script=self.current_script,
                         reference_reply=next_message,
+                        fast_reply_hint=next_message,
                         current_target_slot=self.current_script["target_slot"],
                         target_slot_items=SLOT_DEFINITIONS[self.current_script["target_slot"]],
                         pending_items=pending_items,
@@ -1046,7 +1113,7 @@ class VirtualChildRLSystem:
                 turn.llm_analysis_summary = analysis.summary
                 turn.llm_concerns = list(analysis.concerns)
                 if generation.reply:
-                    next_message = generation.reply
+                    next_message = self._apply_persona_voice(generation.reply, add_address=True)
                     turn.generated_by_llm = True
             except Exception as exc:  # pragma: no cover - network dependent
                 logger.warning("LLM processing failed, using reference reply: %s", exc)
@@ -1077,6 +1144,8 @@ class VirtualChildRLSystem:
             "algorithm": self.session.algorithm,
             "script_file": self.session.script_file,
             "model_path": self.session.model_path,
+            "persona_profile": self.persona_profile,
+            "persona_overview": self._persona_overview(),
             "total_turns": len(self.session.turns),
             "average_similarity": round(average_similarity, 3),
             "average_deviation": round(average_deviation, 3),
@@ -1091,9 +1160,12 @@ class VirtualChildRLSystem:
 
     def render_caregiver_summary(self) -> str:
         summary = self.build_summary_dict()
+        persona_overview = summary.get("persona_overview") or {}
         lines = [
             "# 家屬照護摘要",
             "",
+            f"- 家庭畫像：`{persona_overview.get('label', '')}`",
+            f"- 家庭關係：{persona_overview.get('family_mapping', '')}",
             f"- 演算法：`{summary['algorithm']}`",
             f"- 總對話輪數：`{summary['total_turns']}`",
             f"- 平均相似度：`{summary['average_similarity']}`",
@@ -1163,6 +1235,8 @@ class VirtualChildRLSystem:
             "algorithm": self.session.algorithm,
             "started": self.session.started,
             "latest_assistant_message": latest_assistant_message or self.session.latest_assistant_message,
+            "persona_profile_id": self.session.persona_profile_id,
+            "persona_profile": self.persona_profile,
             "current_script_id": self.session.current_script_id,
             "current_target_slot": self.current_script["target_slot"] if self.session.started else None,
             "state_vector": self.build_state_vector(),
@@ -1172,6 +1246,7 @@ class VirtualChildRLSystem:
             "latest_analysis": self.session.latest_analysis,
             "llm_status": self.session.llm_status,
             "available_model_presets": available_model_presets(),
+            "available_persona_profiles": available_persona_profiles(),
             "background_processing": self.session.background_processing,
         }
 
@@ -1237,6 +1312,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--disable-llm", action="store_true", help="Disable hybrid LLM analysis/generation.")
     parser.add_argument("--analysis-preset", default=DEFAULT_ANALYSIS_PRESET, choices=sorted(available_model_presets()))
     parser.add_argument("--generation-preset", default=DEFAULT_GENERATION_PRESET, choices=sorted(available_model_presets()))
+    parser.add_argument("--persona-profile", default=DEFAULT_PERSONA_PROFILE_ID, choices=sorted(available_persona_profiles()))
     return parser.parse_args()
 
 
@@ -1262,6 +1338,7 @@ def main() -> None:
         llm_enabled=not args.disable_llm,
         analysis_preset=args.analysis_preset,
         generation_preset=args.generation_preset,
+        persona_profile_id=args.persona_profile,
     )
 
     if args.mode == "interactive":
