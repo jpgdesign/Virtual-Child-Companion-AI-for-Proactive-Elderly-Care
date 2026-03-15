@@ -270,7 +270,7 @@ class CareCompanionHandler(BaseHTTPRequestHandler):
                 return
 
             system = session_bundle["system"]
-            result = system.respond_fast(message)
+            result = system.respond(message)
             persist_session_record(session_id, system, user)
             self._send_json(serialize_session(session_id, system, result["assistant_message"], user))
             return

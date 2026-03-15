@@ -991,7 +991,10 @@ class VirtualChildRLSystem:
             self.start_session()
 
         expected = self.current_step["expected_grandma_response"]
-        assistant_message = self._apply_persona_voice(self.current_step["child_dialogue"], add_address=True)
+        assistant_message = self.session.latest_assistant_message or self._apply_persona_voice(
+            self.current_step["child_dialogue"],
+            add_address=True,
+        )
         similarity = self.similarity.score(expected, elder_message)
         rule_deviation = self.similarity.deviation_level(similarity)
         extracted_slots = self.extractor.extract(elder_message)
@@ -1040,6 +1043,7 @@ class VirtualChildRLSystem:
             "evidence": analysis.emotion.evidence,
         }
         self.session.latest_analysis = analysis.to_dict()
+        self.session.latest_analysis["status"] = "disabled" if self.llm is None else "processing"
 
         ranked_candidates_after = self._ranked_candidate_context(current_state)
         pending_items = [
@@ -1117,6 +1121,7 @@ class VirtualChildRLSystem:
                 }
                 self.session.latest_analysis = analysis.to_dict()
                 self.session.latest_analysis["generation"] = generation.to_dict()
+                self.session.latest_analysis["status"] = "completed"
                 turn.deviation_level = max(rule_deviation, analysis.deviation_level or 0)
                 turn.emotion_label = analysis.emotion.label
                 turn.emotion_intensity = analysis.emotion.intensity
@@ -1124,9 +1129,15 @@ class VirtualChildRLSystem:
                 turn.llm_concerns = list(analysis.concerns)
                 if generation.reply:
                     next_message = self._apply_persona_voice(generation.reply, add_address=True)
-                    turn.generated_by_llm = True
             except Exception as exc:  # pragma: no cover - network dependent
                 logger.warning("LLM processing failed, using reference reply: %s", exc)
+                self.session.latest_analysis["status"] = "error"
+                if not self.session.latest_analysis.get("summary"):
+                    self.session.latest_analysis["summary"] = "LLM 分析失敗，已改用參考回覆。"
+
+        self.session.background_processing = False
+        if next_message:
+            self.session.latest_assistant_message = next_message
 
         return {
             "assistant_message": next_message,
@@ -1137,6 +1148,7 @@ class VirtualChildRLSystem:
             "turn": turn.turn,
             "summary": self.build_summary_dict(),
             "analysis": self.session.latest_analysis,
+            "background_processing": self.session.background_processing,
         }
 
     def build_summary_dict(self) -> Dict[str, Any]:

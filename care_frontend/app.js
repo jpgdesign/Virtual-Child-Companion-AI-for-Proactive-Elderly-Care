@@ -11,6 +11,7 @@ const state = {
   adminData: null,
   pollTimer: null,
   backgroundPolling: false,
+  chatSubmitting: false,
   loginError: "",
   adminLoginError: "",
   adminPersonaId: "",
@@ -396,8 +397,8 @@ function renderStatusCards(payload) {
     },
     {
       label: "回覆模式",
-      value: payload.background_processing ? "極速回覆中" : "分析完成",
-      detail: payload.background_processing ? "先回應，再背景補分析與自然化" : "目前顯示最新完成版本",
+      value: state.chatSubmitting ? "分析與生成中" : "分析完成後回覆",
+      detail: state.chatSubmitting ? "正在等待分析結果與生成語句" : "目前顯示的是分析完成後的最終回覆",
     },
     {
       label: "模型路徑",
@@ -458,7 +459,7 @@ function renderChatThread(payload, compact = false) {
       <article class="bubble assistant">
         <div class="bubble-meta">
           <span class="bubble-tag">${escapeHtml(assistantName)}</span>
-          <span class="bubble-tag">${payload.background_processing ? "背景優化中" : "最新回覆"}</span>
+          <span class="bubble-tag">${state.chatSubmitting ? "分析中" : "生成回覆"}</span>
         </div>
         <div class="bubble-body">${escapeHtml(latestPrompt)}</div>
       </article>
@@ -482,11 +483,11 @@ function renderComposer(buttonLabel = "送出訊息") {
     <form id="chat-form" class="composer">
       <label class="composer-field">
         <span>輸入長者回覆</span>
-        <textarea id="chat-input" rows="4" placeholder="例如：我今天早上有去公園走走一下，現在覺得還好。"></textarea>
+        <textarea id="chat-input" rows="4" placeholder="例如：我今天早上有去公園走走一下，現在覺得還好。"${state.chatSubmitting ? " disabled" : ""}></textarea>
       </label>
       <div class="composer-actions">
-        <p class="composer-note">系統會先快速回應，再背景補分析與自然化版本。</p>
-        <button class="send-button" type="submit">${buttonLabel}</button>
+        <p class="composer-note">${state.chatSubmitting ? "系統正在完成分析、填槽與生成回覆，請稍候。" : "系統會先完成分析、填槽與生成，再顯示最終回覆。"}</p>
+        <button class="send-button" type="submit"${state.chatSubmitting ? " disabled" : ""}>${state.chatSubmitting ? "分析中..." : buttonLabel}</button>
       </div>
     </form>
   `;
@@ -587,7 +588,7 @@ function renderSummarySection(summary, payload) {
   const emotionItems = [
     { label: "情緒", value: summary.latest_emotion?.label || "未分析" },
     { label: "強度", value: formatMetric(summary.latest_emotion?.intensity) },
-    { label: "模式", value: payload.background_processing ? "背景分析中" : "已完成" },
+    { label: "模式", value: state.chatSubmitting ? "分析與生成中" : "已完成" },
     { label: "提醒", value: (summary.concerns || []).length ? `${summary.concerns.length} 項` : "無" },
   ];
 
@@ -612,7 +613,7 @@ function renderSummarySection(summary, payload) {
             </article>
           `).join("")}
         </div>
-        <p class="analysis-note">${escapeHtml(payload.latest_analysis?.summary || summary.latest_analysis_summary || "背景分析尚未完成。")}</p>
+        <p class="analysis-note">${escapeHtml(payload.latest_analysis?.summary || summary.latest_analysis_summary || (state.chatSubmitting ? "分析進行中，請稍候。" : "尚未產生分析摘要。"))}</p>
       </section>
 
       <section class="dashboard-card">
@@ -663,7 +664,7 @@ function renderFamilyView() {
           <div>
             <p class="section-label">Conversation Runtime</p>
             <h2>家屬互動工作區</h2>
-            <p class="panel-text">這裡是家屬看到的完整視角，包含即時對話、背景分析與照護摘要。</p>
+            <p class="panel-text">這裡是家屬看到的完整視角，系統會先完成分析與生成，再回覆並同步更新照護摘要。</p>
           </div>
         </div>
         ${renderChatThread(payload)}
@@ -719,7 +720,7 @@ function renderReportAnalysisCard(summary, payload) {
   const slotCandidates = Array.isArray(analysis.slot_candidates) ? analysis.slot_candidates : [];
   const replyStyle = Array.isArray(analysis.reply_style) ? analysis.reply_style : [];
   const insightItems = [
-    { label: "分析狀態", value: analysis.status || (payload.background_processing ? "背景分析中" : "已完成") },
+    { label: "分析狀態", value: state.chatSubmitting ? "分析與生成中" : (analysis.status || "已完成") },
     { label: "最新情緒", value: summary.latest_emotion?.label || "尚未分析" },
     { label: "情緒強度", value: formatMetric(summary.latest_emotion?.intensity) },
     { label: "建議焦點", value: analysis.recommended_focus || summary.next_focus_slots?.[0] || "尚未指定" },
@@ -734,7 +735,7 @@ function renderReportAnalysisCard(summary, payload) {
       <p class="section-label">Analysis Insight</p>
       <h2>分析結果</h2>
       ${renderDetailGrid(insightItems)}
-      <p class="analysis-note">${escapeHtml(analysis.summary || summary.latest_analysis_summary || "背景分析尚未完成。")}</p>
+      <p class="analysis-note">${escapeHtml(analysis.summary || summary.latest_analysis_summary || (state.chatSubmitting ? "分析進行中，請稍候。" : "尚未產生分析摘要。"))}</p>
       <h3 class="subheading">偏離原因</h3>
       <p class="analysis-note">${escapeHtml(analysis.deviation_reason || "目前沒有額外偏離說明。")}</p>
       <h3 class="subheading">LLM 填槽候選</h3>
@@ -828,7 +829,7 @@ function renderReportView() {
     { label: "家庭畫像", value: payload.persona_profile?.label || "尚未選擇" },
     { label: "腳本檔案", value: summary.script_file || "未提供" },
     { label: "模型路徑", value: summary.model_path || "未提供" },
-    { label: "分析模式", value: payload.background_processing ? "背景補分析" : (payload.llm_status?.mode || "即時") },
+    { label: "分析模式", value: state.chatSubmitting ? "同步分析與生成" : (payload.llm_status?.mode || "同步分析與生成") },
     { label: "分析 preset", value: payload.llm_status?.analysis?.preset || "未啟用" },
     { label: "生成 preset", value: payload.llm_status?.generation?.preset || "未啟用" },
   ];
@@ -1231,18 +1232,27 @@ async function handleChatSubmit(event) {
   const textarea = document.getElementById("chat-input");
   const message = textarea.value.trim();
   if (!message) return;
-  const payload = await requestJson("/api/chat", {
-    auth_token: state.authToken,
-    session_id: state.sessionId,
-    message,
-  });
-  textarea.value = "";
-  state.lastPayload = payload;
+  state.chatSubmitting = true;
+  stopBackgroundPolling();
   renderApp();
-  if (payload.background_processing) {
-    scheduleBackgroundPolling();
-  } else {
-    stopBackgroundPolling();
+  try {
+    const payload = await requestJson("/api/chat", {
+      auth_token: state.authToken,
+      session_id: state.sessionId,
+      message,
+    });
+    textarea.value = "";
+    state.lastPayload = payload;
+    if (payload.background_processing) {
+      scheduleBackgroundPolling();
+    } else {
+      stopBackgroundPolling();
+    }
+  } catch (error) {
+    window.alert(error.message);
+  } finally {
+    state.chatSubmitting = false;
+    renderApp();
   }
 }
 
