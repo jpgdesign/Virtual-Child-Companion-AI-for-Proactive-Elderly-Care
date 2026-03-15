@@ -1,6 +1,9 @@
 {
   "project_root": "C:\\Users\\15507\\Desktop\\老人",
   "syntax_checks": {
+    "care_companion_server.py": {
+      "status": "pass"
+    },
     "dialogue_simulator.py": {
       "status": "pass"
     },
@@ -33,10 +36,10 @@
   },
   "optional_packages": {
     "openai": {
-      "installed": false
+      "installed": true
     },
     "docx": {
-      "installed": false
+      "installed": true
     }
   },
   "local_modules": {
@@ -54,6 +57,7 @@
   },
   "sample_files": {
     "session_dir_exists": true,
+    "frontend_exists": true,
     "script_json_candidates": [
       "grandma_session_20250713_185829\\progress.json",
       "grandma_session_20250713_185829\\奶奶劇本\\奶奶對話劇本_20250713_190426.json",
@@ -64,8 +68,14 @@
     "runtime_demo_files": [
       "artifacts\\runtime_demo\\caregiver_summary_20260315_153557.md",
       "artifacts\\runtime_demo\\caregiver_summary_20260315_153754.md",
+      "artifacts\\runtime_demo\\caregiver_summary_20260315_185623.md",
+      "artifacts\\runtime_demo\\caregiver_summary_20260315_185637.md",
+      "artifacts\\runtime_demo\\caregiver_summary_20260315_185733.md",
       "artifacts\\runtime_demo\\runtime_session_20260315_153557.json",
-      "artifacts\\runtime_demo\\runtime_session_20260315_153754.json"
+      "artifacts\\runtime_demo\\runtime_session_20260315_153754.json",
+      "artifacts\\runtime_demo\\runtime_session_20260315_185623.json",
+      "artifacts\\runtime_demo\\runtime_session_20260315_185637.json",
+      "artifacts\\runtime_demo\\runtime_session_20260315_185733.json"
     ]
   },
   "sample_outputs": {
@@ -101,16 +111,17 @@
       "3": 0.0
     },
     "runtime_demo": {
-      "turns": 6,
-      "algorithm": "q_learning",
-      "average_similarity": 0.397,
-      "transitions_used": 5,
+      "turns": 0,
+      "algorithm": "dqn",
+      "average_similarity": 0.0,
+      "transitions_used": 0,
       "next_focus_slots": [
         "用藥狀況",
+        "睡眠狀態",
         "作息活動",
         "飲食狀況"
       ],
-      "summary_file": "artifacts\\runtime_demo\\caregiver_summary_20260315_153754.md"
+      "summary_file": "artifacts\\runtime_demo\\caregiver_summary_20260315_185733.md"
     }
   },
   "secret_scan": {
@@ -118,13 +129,10 @@
     "findings": []
   },
   "summary": {
-    "readiness": "partial",
+    "readiness": "ready",
     "compile_failures": [],
     "required_missing": [],
-    "optional_missing": [
-      "openai",
-      "docx"
-    ],
+    "optional_missing": [],
     "local_missing": [],
     "reference_dir_empty": false,
     "secrets_found": 0

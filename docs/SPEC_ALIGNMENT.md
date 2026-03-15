@@ -9,7 +9,7 @@
 
 ## 目前結論
 
-目前專案已經和說明書、簡報的核心主軸對齊到「可以實跑示範」的程度，但還不是完整產品版。
+目前專案已經和說明書、簡報的核心主軸對齊到「完整本地 demo 可實跑」的程度。
 
 已實作完成的核心：
 
@@ -20,12 +20,14 @@
 - 健康槽位蒐集
 - `DQN` 預設、可切換 `Q-learning`
 - 家屬 / 照護摘要輸出
+- 正式互動前端
+- 瀏覽器語音輸入 / 輸出
+- 本地照護 dashboard
 
-仍屬部分完成的項目：
+仍屬後續擴充的項目：
 
-- 文字與語音雙模態前端
-- 真正給長者操作的大字體 Web / 行動裝置互動介面
-- 後端 API、權限、日誌、儀表板
+- 多使用者後端 API、權限、日誌
+- 跨日 / 跨週趨勢儀表板
 - 穿戴裝置與醫療系統整合
 
 ## 條目比對
@@ -42,10 +44,10 @@
 | DQN 為主，可切換 Q-learning | 已完成 | `integrated_dqn_train.py`、`virtual_child_rl_system.py` 都支援切換 |
 | 產出家屬 / 照護端摘要 | 已完成 | `virtual_child_rl_system.py` 可輸出 Markdown 摘要與 JSON transcript |
 | 系統要真的能跑 | 已完成 | `py virtual_child_rl_system.py --mode demo --algorithm dqn` 與 `--algorithm q_learning` 已實測通過 |
-| Web / 行動裝置介面 | 部分完成 | 目前有成果頁 `site/`，但正式互動式照護前端尚未建立 |
-| 語音輸入 / 輸出 | 未完成 | 目前 repo 尚未接 STT / TTS |
-| 照護端儀表板 | 未完成 | 目前先提供摘要檔，尚未做完整 dashboard |
-| 權限、日誌、後端 API | 未完成 | 目前以本地 demo / CLI 為主 |
+| Web / 行動裝置介面 | 已完成 | `care_companion_server.py` + `care_frontend/` 已提供正式互動式照護前端 |
+| 語音輸入 / 輸出 | 已完成 | 前端已接上瀏覽器 STT / TTS |
+| 照護端儀表板 | 已完成 | 前端右側 dashboard 已即時顯示槽位進度、提醒與摘要 |
+| 權限、日誌、後端 API | 部分完成 | 已有本地 API server，正式多使用者權限仍待擴充 |
 
 ## 實際可跑指令
 
@@ -53,6 +55,7 @@
 py virtual_child_rl_system.py --mode demo --algorithm dqn
 py virtual_child_rl_system.py --mode demo --algorithm q_learning
 py virtual_child_rl_system.py --mode interactive --algorithm dqn
+.\.venv\Scripts\python.exe care_companion_server.py --open-browser
 ```
 
 ## 已驗證輸出
@@ -66,4 +69,4 @@ py virtual_child_rl_system.py --mode interactive --algorithm dqn
 
 最準確的說法是：
 
-> 這個專案已經不是只有文件或簡報概念，而是有一個可實跑的 RL 陪伴對話原型；但前端產品化、語音化、照護後台化還沒有全部做完。
+> 這個專案已經不是只有文件或簡報概念，而是有一個可實跑的 RL 陪伴對話本地完整 demo；接下來重點會放在多使用者、雲端 API 與長期趨勢化。

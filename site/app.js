@@ -1,17 +1,17 @@
 const projectData = {
-  readiness: "partial",
+  readiness: "ready",
   summaryCards: [
     { value: "12", label: "劇本總數", detail: "3 個來源 × 4 個槽位" },
     { value: "2", label: "已驗證 Runtime", detail: "DQN / Q-learning 各 1 次" },
     { value: "6", label: "DQN Demo 輪數", detail: "已輸出家屬摘要" },
-    { value: "5", label: "核心模組", detail: "從腳本到 runtime 全部打通" }
+    { value: "Web + Voice", label: "正式互動前端", detail: "已含 STT / TTS 與 dashboard" }
   ],
   statusBullets: [
     "已對照說明書與簡報，核心主軸改為真正可跑的虛擬兒女 RL 原型。",
     "RL 現在不只負責訓練，還會在 runtime 實際選擇下一個劇本。",
     "DQN 是預設演算法，但可切換到 tabular Q-learning。",
-    "系統已能輸出家屬 / 照護摘要，不再只有對話資料。",
-    "目前最大缺口已轉為產品化前端、語音化與照護後台。"
+    "正式互動前端已補上，可透過本地 server 直接開啟聊天介面。",
+    "瀏覽器語音輸入、語音朗讀與家屬 dashboard 已整合完成。"
   ],
   architecture: [
     {
@@ -67,14 +67,14 @@ const projectData = {
       body: "已可輸出 Markdown 摘要與 JSON transcript。"
     },
     {
-      status: "warn",
+      status: "pass",
       title: "正式前端",
-      body: "目前仍以成果頁與 CLI runtime 為主，尚未做互動式照護前端。"
+      body: "已新增正式互動式照護前端，透過本地 server 即可操作。"
     },
     {
-      status: "warn",
+      status: "pass",
       title: "語音能力",
-      body: "STT / TTS 仍未接入，現在先完成文字版核心流程。"
+      body: "已接上瀏覽器 SpeechRecognition 與 speechSynthesis。"
     }
   ],
   artifactMetrics: [
@@ -113,33 +113,33 @@ const projectData = {
       body: "專案說明資料夾已有 docx / pptx，對齊工作已可直接比對。"
     },
     {
-      status: "warn",
-      title: "可選套件",
-      body: "若要重新生成新劇本，仍需 openai 與 python-docx。"
-    },
-    {
-      status: "warn",
-      title: "產品化缺口",
-      body: "目前尚未補上互動前端、語音 I/O 與照護 dashboard。"
-    },
-    {
       status: "pass",
       title: "金鑰安全",
       body: "硬編碼 OpenAI key 已移除，改為讀取 OPENAI_API_KEY。"
+    },
+    {
+      status: "pass",
+      title: "可選套件",
+      body: "在 .venv 環境下已補上 openai 與 python-docx。"
+    },
+    {
+      status: "pass",
+      title: "產品化 Demo",
+      body: "本地 Web 前端、語音 I/O 與照護 dashboard 都已能實跑。"
     }
   ],
   roadmap: [
     {
-      title: "接前端",
-      body: "把目前 CLI runtime 包成長者可用的 Web / 行動端互動介面。"
+      title: "多使用者",
+      body: "把目前單機 session 擴成多使用者與更完整的個案管理。"
     },
     {
-      title: "補語音",
-      body: "加入 STT / TTS，讓陪伴型對話更接近實際使用場景。"
+      title: "雲端化",
+      body: "把本地 server 改成正式 API 服務，方便接手機與照護系統。"
     },
     {
-      title: "做儀表板",
-      body: "把家屬摘要升級為趨勢 dashboard 與異常提示。"
+      title: "趨勢監測",
+      body: "把目前單次摘要升級成跨日、跨週的趨勢追蹤與告警。"
     },
     {
       title: "做輕量化驗證",

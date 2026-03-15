@@ -574,6 +574,36 @@ class VirtualChildRLSystem:
         lines.extend(["", "## 下一步建議", *[f"- {item}" for item in next_focus]])
         return "\n".join(lines)
 
+    def serialize_turns(self) -> List[Dict[str, Any]]:
+        return [
+            {
+                "turn": turn.turn,
+                "assistant_message": turn.assistant_message,
+                "elder_message": turn.elder_message,
+                "expected_response": turn.expected_response,
+                "script_id": turn.script_id,
+                "target_slot": turn.target_slot,
+                "similarity": round(turn.similarity, 3),
+                "deviation_level": turn.deviation_level,
+                "transition_used": turn.transition_used,
+                "extracted_slots": turn.extracted_slots,
+            }
+            for turn in self.session.turns
+        ]
+
+    def build_ui_payload(self, latest_assistant_message: str | None = None) -> Dict[str, Any]:
+        return {
+            "algorithm": self.session.algorithm,
+            "started": self.session.started,
+            "latest_assistant_message": latest_assistant_message,
+            "current_script_id": self.session.current_script_id,
+            "current_target_slot": self.current_script["target_slot"] if self.session.started else None,
+            "state_vector": self.build_state_vector(),
+            "summary": self.build_summary_dict(),
+            "summary_markdown": self.render_caregiver_summary(),
+            "turns": self.serialize_turns(),
+        }
+
     def save_session(self, output_dir: Path | None = None) -> Dict[str, str]:
         output_dir = output_dir or Path("artifacts/runtime_demo")
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -583,21 +613,7 @@ class VirtualChildRLSystem:
 
         transcript = {
             "summary": self.build_summary_dict(),
-            "turns": [
-                {
-                    "turn": turn.turn,
-                    "assistant_message": turn.assistant_message,
-                    "elder_message": turn.elder_message,
-                    "expected_response": turn.expected_response,
-                    "script_id": turn.script_id,
-                    "target_slot": turn.target_slot,
-                    "similarity": turn.similarity,
-                    "deviation_level": turn.deviation_level,
-                    "transition_used": turn.transition_used,
-                    "extracted_slots": turn.extracted_slots,
-                }
-                for turn in self.session.turns
-            ],
+            "turns": self.serialize_turns(),
         }
         transcript_path.write_text(json.dumps(transcript, ensure_ascii=False, indent=2), encoding="utf-8")
         summary_path.write_text(self.render_caregiver_summary(), encoding="utf-8")

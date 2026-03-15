@@ -180,7 +180,8 @@ py virtual_child_rl_system.py --mode interactive --algorithm dqn
 
 - 核心概念已對齊：`虛擬兒女`、`隱性聊天`、`健康槽位`、`偏離偵測`、`RL 選劇本`
 - 實作已對齊：DQN 為主、可切 Q-learning、可輸出家屬摘要
-- 尚未完整產品化：語音介面、正式 Web/手機互動前端、權限/API、照護儀表板
+- 已補成本地完整 demo：正式互動前端、瀏覽器語音、家屬 dashboard
+- 後續仍可擴充：多使用者權限、正式雲端 API、跨期趨勢看板
 
 完整對齊表請看：
 
@@ -264,26 +265,27 @@ py tools/feasibility_check.py
 |---|---|---|
 | Python 語法檢查 | 通過 | 5 支主要 Python 檔皆可做語法級檢查 |
 | 必要套件 | 通過 | `numpy`、`torch`、`sentence_transformers`、`pandas` 可被發現 |
-| 可選套件 | 缺少 | `openai`、`python-docx` 未安裝 |
-| 本地模組 | 通過 | 已補上 `dueling_dqn.py`、`tabular_q_learning.py` 與實跑 runtime |
+| 可選套件 | 通過 | `.venv` 環境內已補上 `openai`、`python-docx` |
+| 本地模組 | 通過 | 已補上 `dueling_dqn.py`、`tabular_q_learning.py`、互動前端與實跑 runtime |
 | 參考資料夾 | 存在 | `專案說明/` 已有 `docx` 與 `pptx` 參考檔 |
-| 範例輸出 | 存在 | 已找到腳本、對話、RL 樣本與 runtime demo |
+| 範例輸出 | 存在 | 已找到腳本、對話、RL 樣本、Web 前端與 runtime demo |
 | 金鑰外洩 | 已修正 | 已改為從 `OPENAI_API_KEY` 讀取 |
 
 ### 目前結論
 
-本專案屬於「部分可行（partial feasibility）」：
+本專案在 `.venv` 環境下已屬於「可重現（ready）」：
 
 - 文件整理、架構重建、成果展示：可行
 - DQN / Q-learning runtime 對話示範：可行
 - 家屬摘要輸出：可行
-- 重新生成新劇本與完整雲端流程：仍需補件
+- 正式互動前端、瀏覽器語音與家屬 dashboard：可行
+- 重新生成新劇本與完整雲端部署：可進一步擴充
 
-主因不是語法壞掉，而是：
+目前仍值得持續補強的部分是：
 
-- 新劇本生成仍依賴 `openai` 與 `python-docx`
-- 原始 `data/` 來源檔仍未補齊
-- Web / 語音產品化介面尚未完成
+- 多使用者與正式權限管理
+- 雲端 API 化
+- 長期照護趨勢 dashboard
 
 ## 10. GitHub 上傳前檢查清單
 
@@ -305,10 +307,10 @@ py tools/feasibility_check.py
 
 如果你要把這個專案繼續往研究或產品化推進，最建議的順序是：
 
-1. 把 `virtual_child_rl_system.py` 接成真正的 Web / 行動端互動頁
-2. 補進語音辨識 / 語音合成
-3. 把家屬摘要升級為 dashboard
-4. 補齊 `data/` 與更多個案資料來源
+1. 把 `care_companion_server.py` 擴成多使用者正式 API
+2. 把目前單次摘要升級成跨日 / 跨週照護趨勢板
+3. 補齊更多個案資料與測試語料
+4. 規劃 Hugging Face / 雲端部署版
 5. 再做真正的 AI 輕量化驗證，如量化、蒸餾、推論延遲比較
 
 ## 12. 這次新增的成果
@@ -323,6 +325,8 @@ py tools/feasibility_check.py
 - `site/app.js`
 - `.env.example`
 - `virtual_child_rl_system.py`
+- `care_companion_server.py`
+- `care_frontend/`
 
 ## 13. 快速啟動
 
@@ -357,18 +361,30 @@ $env:OPENAI_API_KEY="your_openai_api_key_here"
 ### 13.3 執行可行性檢查
 
 ```powershell
-py tools/feasibility_check.py
+.\.venv\Scripts\python.exe tools\feasibility_check.py
 ```
 
 ### 13.4 執行 RL runtime
 
 ```powershell
-py virtual_child_rl_system.py --mode demo --algorithm dqn
-py virtual_child_rl_system.py --mode demo --algorithm q_learning
-py virtual_child_rl_system.py --mode interactive --algorithm dqn
+.\.venv\Scripts\python.exe virtual_child_rl_system.py --mode demo --algorithm dqn
+.\.venv\Scripts\python.exe virtual_child_rl_system.py --mode demo --algorithm q_learning
+.\.venv\Scripts\python.exe virtual_child_rl_system.py --mode interactive --algorithm dqn
 ```
 
-### 13.5 開啟成果網頁
+### 13.5 啟動正式互動前端
+
+```powershell
+.\.venv\Scripts\python.exe care_companion_server.py --open-browser
+```
+
+啟動後瀏覽器會開啟：
+
+```text
+http://127.0.0.1:8000
+```
+
+### 13.6 開啟成果網頁
 
 直接用瀏覽器打開：
 
@@ -380,4 +396,4 @@ site/index.html
 
 如果把這份 README 濃縮成一句話，這個專案目前最適合被定位成：
 
-> 一個以高齡對話模擬與強化學習為主題、已能實跑 DQN / Q-learning 對話 runtime 的研究型原型；目前核心概念已落地，但前端產品化、語音化與完整雲端流程仍待補完。
+> 一個以高齡對話模擬與強化學習為主題、已能實跑 DQN / Q-learning、正式互動前端、瀏覽器語音與家屬 dashboard 的研究型原型；目前已具備完整本地 demo，下一步是多使用者與雲端化。

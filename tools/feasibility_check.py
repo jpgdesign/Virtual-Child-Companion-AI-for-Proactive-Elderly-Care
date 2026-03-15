@@ -9,6 +9,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 SOURCE_FILES = [
+    "care_companion_server.py",
     "dialogue_simulator.py",
     "integrated_dqn_train.py",
     "R_data.py",
@@ -81,6 +82,7 @@ def find_sample_files() -> dict:
     runtime_demo_files = sorted(runtime_demo_dir.glob("*")) if runtime_demo_dir.exists() else []
     return {
         "session_dir_exists": session_dir.exists(),
+        "frontend_exists": (ROOT / "care_frontend" / "index.html").exists(),
         "script_json_candidates": [str(path.relative_to(ROOT)) for path in script_json_candidates],
         "dialogue_json_exists": (ROOT / "pure_dialogue_20250721_142929.json").exists(),
         "rl_json_exists": (ROOT / "rl_data_20250721_142929.json").exists(),
