@@ -10,7 +10,7 @@ from urllib.request import Request, urlopen
 
 try:
     from openai import OpenAI
-except ImportError:  # pragma: no cover - optional dependency path
+except ImportError:  # pragma: no cover
     OpenAI = None
 
 
@@ -37,7 +37,7 @@ MODEL_PRESETS: Dict[str, Dict[str, Any]] = {
         "model": "qwen3:8b",
         "base_url": "http://163.13.128.68:11434",
         "api_key": "",
-        "temperature": 0.2,
+        "temperature": 0.15,
         "timeout": 90.0,
     },
     "qwen35_lmstudio": {
@@ -45,7 +45,7 @@ MODEL_PRESETS: Dict[str, Dict[str, Any]] = {
         "model": "qwen3.5-9b-claude",
         "base_url": "http://163.13.128.68:1234/v1",
         "api_key": "lm-studio",
-        "temperature": 0.35,
+        "temperature": 0.25,
         "timeout": 45.0,
     },
 }
@@ -144,9 +144,9 @@ def build_endpoint_config(preset_name: str | None, *, fallback: str) -> LLMEndpo
 def strip_reasoning(text: str) -> str:
     cleaned = re.sub(r"<think>.*?</think>\s*", "", text or "", flags=re.IGNORECASE | re.DOTALL)
     if cleaned.strip().startswith("```"):
-        fence_match = re.search(r"```(?:json)?\s*(.*?)```", cleaned, flags=re.IGNORECASE | re.DOTALL)
-        if fence_match:
-            cleaned = fence_match.group(1)
+        fenced = re.search(r"```(?:json)?\s*(.*?)```", cleaned, flags=re.IGNORECASE | re.DOTALL)
+        if fenced:
+            cleaned = fenced.group(1)
     return cleaned.strip()
 
 
@@ -158,10 +158,10 @@ def extract_json_object(text: str) -> Dict[str, Any]:
             continue
         try:
             payload, _ = decoder.raw_decode(cleaned[index:])
-            if isinstance(payload, dict):
-                return payload
         except json.JSONDecodeError:
             continue
+        if isinstance(payload, dict):
+            return payload
     raise ValueError("No JSON object found in model response.")
 
 
@@ -169,12 +169,12 @@ class ChatClient:
     def __init__(self, config: LLMEndpointConfig) -> None:
         self.config = config
 
-    def chat(self, messages: Sequence[Dict[str, str]], *, temperature: float | None = None) -> str:
-        raise NotImplementedError
-
     @property
     def label(self) -> str:
         return self.config.label()
+
+    def chat(self, messages: Sequence[Dict[str, str]], *, temperature: float | None = None) -> str:
+        raise NotImplementedError
 
 
 class OllamaChatClient(ChatClient):
@@ -199,18 +199,15 @@ class OllamaChatClient(ChatClient):
         try:
             with urlopen(request, timeout=self.config.timeout) as response:
                 raw_payload = json.loads(response.read().decode("utf-8"))
-        except URLError as exc:  # pragma: no cover - network dependent
+        except URLError as exc:  # pragma: no cover
             raise RuntimeError(f"Ollama request failed: {exc}") from exc
-
-        message = raw_payload.get("message", {})
-        content = str(message.get("content", "")).strip()
-        return content
+        return str(raw_payload.get("message", {}).get("content", "")).strip()
 
 
 class OpenAICompatibleChatClient(ChatClient):
     def __init__(self, config: LLMEndpointConfig) -> None:
         if OpenAI is None:
-            raise RuntimeError("openai package is required for the configured generation model.")
+            raise RuntimeError("openai package is required for this model preset.")
         super().__init__(config)
         self.client = OpenAI(base_url=config.base_url, api_key=config.api_key or "lm-studio")
 
@@ -257,6 +254,47 @@ def _normalize_bool(value: Any) -> bool | None:
     return None
 
 
+def _parse_slot_candidates(items: Sequence[Any]) -> List[SlotCandidate]:
+    candidates: List[SlotCandidate] = []
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        candidates.append(
+            SlotCandidate(
+                slot=str(item.get("slot", "")).strip(),
+                item=str(item.get("item", "")).strip(),
+                value=str(item.get("value", "")).strip(),
+                confidence=max(0.0, min(1.0, _safe_float(item.get("confidence"), 0.0))),
+                evidence=str(item.get("evidence", "")).strip(),
+            )
+        )
+    return candidates
+
+
+def _parse_emotion(payload: Dict[str, Any]) -> EmotionSnapshot:
+    return EmotionSnapshot(
+        label=str(payload.get("label", "平穩")).strip() or "平穩",
+        intensity=max(0.0, min(1.0, _safe_float(payload.get("intensity"), 0.0))),
+        evidence=str(payload.get("evidence", "")).strip(),
+    )
+
+
+def _parse_analysis_payload(payload: Dict[str, Any], *, raw_content: str, model_label: str) -> LLMAnalysisResult:
+    return LLMAnalysisResult(
+        summary=str(payload.get("summary", "")).strip(),
+        emotion=_parse_emotion(payload.get("emotion") or {}),
+        slot_candidates=_parse_slot_candidates(payload.get("filled_slots", [])),
+        concerns=[str(item).strip() for item in payload.get("concerns", []) if str(item).strip()],
+        deviation_level=_safe_int(payload.get("deviation_level")),
+        deviation_reason=str(payload.get("deviation_reason", "")).strip(),
+        should_transition=_normalize_bool(payload.get("should_transition")),
+        reply_style=[str(item).strip() for item in payload.get("reply_style", []) if str(item).strip()],
+        recommended_focus=str(payload.get("recommended_focus", "")).strip(),
+        raw_content=raw_content,
+        model_label=model_label,
+    )
+
+
 class HybridLLMOrchestrator:
     def __init__(
         self,
@@ -268,13 +306,96 @@ class HybridLLMOrchestrator:
         self.generation_config = generation_config
         self.analysis_client = build_chat_client(analysis_config)
         self.generation_client = build_chat_client(generation_config)
+        self.use_fused_turns = analysis_config.preset == generation_config.preset
 
     def status_dict(self) -> Dict[str, Any]:
         return {
             "enabled": True,
+            "mode": "fused" if self.use_fused_turns else "split",
             "analysis": asdict(self.analysis_config),
             "generation": asdict(self.generation_config),
         }
+
+    def analyze_and_generate_turn(
+        self,
+        *,
+        elder_message: str,
+        current_script: Dict[str, Any],
+        current_step: Dict[str, Any],
+        selected_script: Dict[str, Any],
+        reference_reply: str,
+        current_target_slot: str,
+        target_slot_items: Sequence[str],
+        pending_items: Sequence[str],
+        recent_turns: Sequence[Dict[str, Any]],
+        filled_slots: Dict[str, List[str]],
+        regex_extracted: Dict[str, List[str]],
+        similarity_score: float,
+        rule_deviation: int,
+        ranked_candidates: Sequence[Dict[str, Any]],
+        transition_mode: bool,
+    ) -> tuple[LLMAnalysisResult, LLMGenerationResult]:
+        system_prompt = (
+            "You are a care-dialogue copilot for a virtual child talking to an older adult. "
+            "Return exactly one JSON object and nothing else. "
+            "No markdown. No think tags. "
+            "The reply must be in Traditional Chinese and 1 to 3 sentences. "
+            "Follow current_target_slot strictly. "
+            "Use pending_items to guide the next follow-up naturally."
+        )
+        user_payload = {
+            "task": "analyze_and_generate",
+            "elder_message": elder_message,
+            "current_script": {
+                "script_id": current_script.get("script_id"),
+                "target_slot": current_script.get("target_slot"),
+            },
+            "current_step": {
+                "reference_child_dialogue": current_step.get("child_dialogue"),
+                "expected_elder_response": current_step.get("expected_grandma_response"),
+            },
+            "selected_next_script": {
+                "script_id": selected_script.get("script_id"),
+                "target_slot": selected_script.get("target_slot"),
+            },
+            "reference_reply": reference_reply,
+            "current_target_slot": current_target_slot,
+            "target_slot_items": list(target_slot_items),
+            "pending_items": list(pending_items),
+            "recent_turns": list(recent_turns)[-3:],
+            "filled_slots": filled_slots,
+            "regex_extracted": regex_extracted,
+            "similarity_score": round(similarity_score, 3),
+            "rule_deviation": rule_deviation,
+            "ranked_candidates": list(ranked_candidates)[:2],
+            "transition_mode": transition_mode,
+            "output_schema": {
+                "summary": "one short sentence",
+                "emotion": {"label": "string", "intensity": 0.0, "evidence": "string"},
+                "filled_slots": [
+                    {"slot": "string", "item": "string", "value": "string", "confidence": 0.0, "evidence": "string"}
+                ],
+                "concerns": ["string"],
+                "deviation_level": 0,
+                "deviation_reason": "string",
+                "should_transition": False,
+                "reply_style": ["string"],
+                "recommended_focus": "string",
+                "reply": "Traditional Chinese natural reply",
+            },
+        }
+        raw_content = self.generation_client.chat(
+            [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": json.dumps(user_payload, ensure_ascii=False, separators=(",", ":"))},
+            ],
+            temperature=self.generation_config.temperature,
+        )
+        payload = extract_json_object(raw_content)
+        analysis = _parse_analysis_payload(payload, raw_content=raw_content, model_label=self.generation_client.label)
+        reply = str(payload.get("reply", "")).strip() or reference_reply
+        generation = LLMGenerationResult(reply=reply, raw_content=raw_content, model_label=self.generation_client.label)
+        return analysis, generation
 
     def analyze_turn(
         self,
@@ -291,9 +412,8 @@ class HybridLLMOrchestrator:
         ranked_candidates: Sequence[Dict[str, Any]],
     ) -> LLMAnalysisResult:
         system_prompt = (
-            "你是長者照護對話分析器。"
-            "請根據對話內容輸出 JSON，協助情緒分析、填槽與偏離判斷。"
-            "只輸出一個 JSON 物件，不要輸出 markdown，不要解釋，不要加入 think 標記。"
+            "You analyze an older adult's reply for a care dialogue system. "
+            "Return exactly one JSON object. No markdown. No think tags."
         )
         user_payload = {
             "task": "analyze_elder_reply",
@@ -306,89 +426,36 @@ class HybridLLMOrchestrator:
                 "reference_child_dialogue": current_step.get("child_dialogue"),
                 "expected_elder_response": current_step.get("expected_grandma_response"),
             },
-            "recent_turns": list(recent_turns)[-4:],
-            "current_filled_slots": filled_slots,
+            "recent_turns": list(recent_turns)[-3:],
+            "filled_slots": filled_slots,
             "slot_taxonomy": slot_definitions,
             "regex_extracted": regex_extracted,
-            "similarity_score": similarity_score,
-            "similarity_deviation": similarity_deviation,
-            "ranked_candidate_scripts": list(ranked_candidates)[:3],
+            "similarity_score": round(similarity_score, 3),
+            "rule_deviation": similarity_deviation,
+            "ranked_candidates": list(ranked_candidates)[:2],
             "output_schema": {
-                "summary": "一句話摘要",
-                "emotion": {
-                    "label": "情緒標籤",
-                    "intensity": "0到1",
-                    "evidence": "判斷依據",
-                },
+                "summary": "string",
+                "emotion": {"label": "string", "intensity": 0.0, "evidence": "string"},
                 "filled_slots": [
-                    {
-                        "slot": "四大槽位之一",
-                        "item": "該槽位底下的既有子項",
-                        "value": "從長者回覆萃取的值",
-                        "confidence": "0到1",
-                        "evidence": "引用或理由",
-                    }
+                    {"slot": "string", "item": "string", "value": "string", "confidence": 0.0, "evidence": "string"}
                 ],
-                "concerns": ["風險或照護提醒"],
-                "deviation_level": "0到3整數",
-                "deviation_reason": "偏離判斷依據",
-                "should_transition": "true或false",
-                "reply_style": ["例如溫暖、關心、輕柔轉場"],
-                "recommended_focus": "建議下一步聚焦",
+                "concerns": ["string"],
+                "deviation_level": 0,
+                "deviation_reason": "string",
+                "should_transition": False,
+                "reply_style": ["string"],
+                "recommended_focus": "string",
             },
         }
         raw_content = self.analysis_client.chat(
             [
                 {"role": "system", "content": system_prompt},
-                {"role": "user", "content": json.dumps(user_payload, ensure_ascii=False, indent=2)},
+                {"role": "user", "content": json.dumps(user_payload, ensure_ascii=False, separators=(",", ":"))},
             ],
-            temperature=0.05,
+            temperature=0.0,
         )
-
-        try:
-            payload = extract_json_object(raw_content)
-        except ValueError as exc:
-            logger.warning("Falling back from LLM analysis JSON parse failure: %s", exc)
-            return LLMAnalysisResult(
-                summary="",
-                raw_content=raw_content,
-                model_label=self.analysis_client.label,
-            )
-
-        candidates: List[SlotCandidate] = []
-        for item in payload.get("filled_slots", []):
-            if not isinstance(item, dict):
-                continue
-            candidates.append(
-                SlotCandidate(
-                    slot=str(item.get("slot", "")).strip(),
-                    item=str(item.get("item", "")).strip(),
-                    value=str(item.get("value", "")).strip(),
-                    confidence=max(0.0, min(1.0, _safe_float(item.get("confidence"), 0.0))),
-                    evidence=str(item.get("evidence", "")).strip(),
-                )
-            )
-
-        emotion_payload = payload.get("emotion") or {}
-        emotion = EmotionSnapshot(
-            label=str(emotion_payload.get("label", "平穩")).strip() or "平穩",
-            intensity=max(0.0, min(1.0, _safe_float(emotion_payload.get("intensity"), 0.0))),
-            evidence=str(emotion_payload.get("evidence", "")).strip(),
-        )
-
-        return LLMAnalysisResult(
-            summary=str(payload.get("summary", "")).strip(),
-            emotion=emotion,
-            slot_candidates=candidates,
-            concerns=[str(item).strip() for item in payload.get("concerns", []) if str(item).strip()],
-            deviation_level=_safe_int(payload.get("deviation_level")),
-            deviation_reason=str(payload.get("deviation_reason", "")).strip(),
-            should_transition=_normalize_bool(payload.get("should_transition")),
-            reply_style=[str(item).strip() for item in payload.get("reply_style", []) if str(item).strip()],
-            recommended_focus=str(payload.get("recommended_focus", "")).strip(),
-            raw_content=raw_content,
-            model_label=self.analysis_client.label,
-        )
+        payload = extract_json_object(raw_content)
+        return _parse_analysis_payload(payload, raw_content=raw_content, model_label=self.analysis_client.label)
 
     def generate_reply(
         self,
@@ -407,12 +474,10 @@ class HybridLLMOrchestrator:
         transition_mode: bool,
     ) -> LLMGenerationResult:
         system_prompt = (
-            "你是溫暖、自然、主動關心長者的虛擬子女。"
-            "請根據 RL 選出的策略與參考語句，生成一段繁體中文回覆。"
-            "務必自然、簡短、口語，不要列點，不要輸出 JSON，不要輸出 think。"
-            "若需要轉場，請柔和地把焦點帶到指定槽位。"
-            "current_target_slot 是硬限制，回覆必須圍繞這個槽位。"
-            "不要捏造醫療建議；若內容有風險，只做關心與確認。"
+            "You are a warm virtual child speaking Traditional Chinese. "
+            "Write a short natural reply in 1 to 3 sentences. "
+            "No markdown. No think tags. "
+            "Follow current_target_slot strictly and use pending_items."
         )
         user_payload = {
             "task": "generate_virtual_child_reply",
@@ -429,33 +494,19 @@ class HybridLLMOrchestrator:
             "analysis_summary": analysis.summary,
             "emotion": asdict(analysis.emotion),
             "concerns": analysis.concerns,
-            "reply_style": analysis.reply_style or ["溫暖", "自然", "有陪伴感"],
+            "reply_style": analysis.reply_style or ["warm", "natural", "supportive"],
             "recommended_focus": analysis.recommended_focus,
             "filled_slots": filled_slots,
             "slot_value_details": slot_value_details,
-            "recent_turns": list(recent_turns)[-4:],
-            "ranked_candidate_scripts": list(ranked_candidates)[:3],
-            "constraints": [
-                "1到3句繁體中文",
-                "保留參考語句的目標，但不要逐字照抄",
-                "回覆要能接住使用者剛剛說的內容",
-                "讓下一輪更有機會補到目標槽位",
-                "優先追問 pending_items",
-            ],
+            "recent_turns": list(recent_turns)[-3:],
+            "ranked_candidates": list(ranked_candidates)[:2],
         }
         raw_content = self.generation_client.chat(
             [
                 {"role": "system", "content": system_prompt},
-                {"role": "user", "content": json.dumps(user_payload, ensure_ascii=False, indent=2)},
+                {"role": "user", "content": json.dumps(user_payload, ensure_ascii=False, separators=(",", ":"))},
             ],
             temperature=self.generation_config.temperature,
         )
-        cleaned = strip_reasoning(raw_content)
-        reply = cleaned.splitlines()[0].strip()
-        if not reply:
-            reply = reference_reply
-        return LLMGenerationResult(
-            reply=reply,
-            raw_content=raw_content,
-            model_label=self.generation_client.label,
-        )
+        reply = strip_reasoning(raw_content).splitlines()[0].strip() or reference_reply
+        return LLMGenerationResult(reply=reply, raw_content=raw_content, model_label=self.generation_client.label)

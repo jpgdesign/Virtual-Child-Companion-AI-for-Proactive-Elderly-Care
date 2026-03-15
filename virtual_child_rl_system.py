@@ -578,44 +578,10 @@ class VirtualChildRLSystem:
         extracted_slots = self.extractor.extract(elder_message)
         self._register_extracted_slots(extracted_slots)
 
-        ranked_candidates_before = self._ranked_candidate_context(self.build_state_vector(False))
-        analysis = LLMAnalysisResult()
-        if self.llm is not None:
-            try:
-                analysis = self.llm.analyze_turn(
-                    elder_message=elder_message,
-                    current_script=self.current_script,
-                    current_step=self.current_step,
-                    recent_turns=self._recent_turn_context(),
-                    filled_slots=self.session.filled_slots,
-                    slot_definitions=SLOT_DEFINITIONS,
-                    regex_extracted=extracted_slots,
-                    similarity_score=similarity,
-                    similarity_deviation=rule_deviation,
-                    ranked_candidates=ranked_candidates_before,
-                )
-                self._register_llm_slot_candidates(analysis)
-            except Exception as exc:  # pragma: no cover - network dependent
-                logger.warning("LLM analysis failed, falling back to rule-based flow: %s", exc)
-                analysis = LLMAnalysisResult(summary="", raw_content=str(exc))
-
-        deviation_level = rule_deviation
-        if analysis.deviation_level is not None:
-            deviation_level = max(rule_deviation, max(0, min(3, analysis.deviation_level)))
-
-        high_deviation = deviation_level >= 2
-        if analysis.should_transition is True:
-            high_deviation = True
+        high_deviation = rule_deviation >= 2
         self.session.last_deviation_high = high_deviation
         if high_deviation:
             self.session.transitions_used += 1
-
-        self.session.latest_emotion = {
-            "label": analysis.emotion.label,
-            "intensity": analysis.emotion.intensity,
-            "evidence": analysis.emotion.evidence,
-        }
-        self.session.latest_analysis = analysis.to_dict()
 
         turn = RuntimeTurn(
             turn=len(self.session.turns) + 1,
@@ -625,13 +591,9 @@ class VirtualChildRLSystem:
             script_id=self.session.current_script_id,
             target_slot=self.current_script["target_slot"],
             similarity=similarity,
-            deviation_level=deviation_level,
+            deviation_level=rule_deviation,
             extracted_slots=extracted_slots,
             transition_used=high_deviation,
-            emotion_label=analysis.emotion.label,
-            emotion_intensity=analysis.emotion.intensity,
-            llm_analysis_summary=analysis.summary,
-            llm_concerns=list(analysis.concerns),
         )
         self.session.turns.append(turn)
 
@@ -650,38 +612,98 @@ class VirtualChildRLSystem:
             if next_message is None:
                 next_message = self._switch_script(current_state, prefer_new=target_slot_complete)
 
+        analysis = LLMAnalysisResult()
+        self.session.latest_emotion = {
+            "label": analysis.emotion.label,
+            "intensity": analysis.emotion.intensity,
+            "evidence": analysis.emotion.evidence,
+        }
+        self.session.latest_analysis = analysis.to_dict()
+
         ranked_candidates_after = self._ranked_candidate_context(current_state)
+        pending_items = [
+            item
+            for item in SLOT_DEFINITIONS[self.current_script["target_slot"]]
+            if item not in self.session.filled_slots.get(self.current_script["target_slot"], [])
+        ]
+
         if self.llm is not None and next_message:
             try:
-                generation = self.llm.generate_reply(
-                    elder_message=elder_message,
-                    selected_script=self.current_script,
-                    reference_reply=next_message,
-                    current_target_slot=self.current_script["target_slot"],
-                    target_slot_items=SLOT_DEFINITIONS[self.current_script["target_slot"]],
-                    pending_items=[
-                        item
-                        for item in SLOT_DEFINITIONS[self.current_script["target_slot"]]
-                        if item not in self.session.filled_slots.get(self.current_script["target_slot"], [])
-                    ],
-                    filled_slots=self.session.filled_slots,
-                    slot_value_details=self.session.slot_value_details,
-                    analysis=analysis,
-                    recent_turns=self._recent_turn_context(),
-                    ranked_candidates=ranked_candidates_after,
-                    transition_mode=transition_mode,
-                )
+                if self.llm.use_fused_turns:
+                    analysis, generation = self.llm.analyze_and_generate_turn(
+                        elder_message=elder_message,
+                        current_script=self.scripts_by_id[turn.script_id],
+                        current_step={
+                            "child_dialogue": assistant_message,
+                            "expected_grandma_response": expected,
+                        },
+                        selected_script=self.current_script,
+                        reference_reply=next_message,
+                        current_target_slot=self.current_script["target_slot"],
+                        target_slot_items=SLOT_DEFINITIONS[self.current_script["target_slot"]],
+                        pending_items=pending_items,
+                        recent_turns=self._recent_turn_context(),
+                        filled_slots=self.session.filled_slots,
+                        regex_extracted=extracted_slots,
+                        similarity_score=similarity,
+                        rule_deviation=rule_deviation,
+                        ranked_candidates=ranked_candidates_after,
+                        transition_mode=transition_mode,
+                    )
+                else:
+                    analysis = self.llm.analyze_turn(
+                        elder_message=elder_message,
+                        current_script=self.scripts_by_id[turn.script_id],
+                        current_step={
+                            "child_dialogue": assistant_message,
+                            "expected_grandma_response": expected,
+                        },
+                        recent_turns=self._recent_turn_context(),
+                        filled_slots=self.session.filled_slots,
+                        slot_definitions=SLOT_DEFINITIONS,
+                        regex_extracted=extracted_slots,
+                        similarity_score=similarity,
+                        similarity_deviation=rule_deviation,
+                        ranked_candidates=ranked_candidates_after,
+                    )
+                    generation = self.llm.generate_reply(
+                        elder_message=elder_message,
+                        selected_script=self.current_script,
+                        reference_reply=next_message,
+                        current_target_slot=self.current_script["target_slot"],
+                        target_slot_items=SLOT_DEFINITIONS[self.current_script["target_slot"]],
+                        pending_items=pending_items,
+                        filled_slots=self.session.filled_slots,
+                        slot_value_details=self.session.slot_value_details,
+                        analysis=analysis,
+                        recent_turns=self._recent_turn_context(),
+                        ranked_candidates=ranked_candidates_after,
+                        transition_mode=transition_mode,
+                    )
+
+                self._register_llm_slot_candidates(analysis)
+                self.session.latest_emotion = {
+                    "label": analysis.emotion.label,
+                    "intensity": analysis.emotion.intensity,
+                    "evidence": analysis.emotion.evidence,
+                }
+                self.session.latest_analysis = analysis.to_dict()
+                self.session.latest_analysis["generation"] = generation.to_dict()
+                turn.deviation_level = max(rule_deviation, analysis.deviation_level or 0)
+                turn.emotion_label = analysis.emotion.label
+                turn.emotion_intensity = analysis.emotion.intensity
+                turn.llm_analysis_summary = analysis.summary
+                turn.llm_concerns = list(analysis.concerns)
                 if generation.reply:
                     next_message = generation.reply
                     turn.generated_by_llm = True
-                    self.session.latest_analysis["generation"] = generation.to_dict()
             except Exception as exc:  # pragma: no cover - network dependent
-                logger.warning("LLM generation failed, using reference reply: %s", exc)
+                logger.warning("LLM processing failed, using reference reply: %s", exc)
 
         return {
             "assistant_message": next_message,
             "similarity": similarity,
-            "deviation_level": deviation_level,
+            "deviation_level": turn.deviation_level,
             "current_state": current_state,
             "filled_slots": self.session.filled_slots,
             "turn": turn.turn,
