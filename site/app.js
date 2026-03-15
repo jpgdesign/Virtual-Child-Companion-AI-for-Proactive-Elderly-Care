@@ -10,7 +10,8 @@ const projectData = {
     "主要 Python 檔可通過語法檢查。",
     "README、可行性報告與成果網頁已補齊。",
     "OpenAI 金鑰已改為環境變數讀取。",
-    "缺少 4 個本地模組與 3 個可選套件，暫時無法完整重跑訓練。"
+    "RL 已改成預設 DQN，並可切換到 tabular Q-learning。",
+    "目前主要缺口已縮小為資料完整性與 openai / python-docx 套件。"
   ],
   architecture: [
     {
@@ -70,12 +71,12 @@ const projectData = {
     {
       status: "warn",
       title: "可選套件",
-      body: "openai、jsonlines、python-docx 目前未安裝。"
+      body: "目前只剩 openai 與 python-docx 需要依實際執行需求安裝。"
     },
     {
-      status: "fail",
-      title: "本地模組",
-      body: "dueling_dqn.py、data_preprocessor.py、visualize_matrices.py、f1_evaluator.py 缺失。"
+      status: "pass",
+      title: "RL 切換",
+      body: "已補上 dueling_dqn.py 與 tabular_q_learning.py，主訓練器可在 DQN / Q-learning 間切換。"
     },
     {
       status: "warn",

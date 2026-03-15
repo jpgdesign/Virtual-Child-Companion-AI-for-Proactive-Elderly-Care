@@ -74,7 +74,6 @@ py tools/feasibility_check.py
 #### 缺少
 
 - `openai`
-- `jsonlines`
 - `docx`  
   說明：`docx` 對應常見套件為 `python-docx`
 
@@ -85,17 +84,16 @@ py tools/feasibility_check.py
 
 ### 4.3 本地模組缺漏
 
-以下模組在目前目錄中不存在：
+目前 RL 訓練核心模組已整理為：
 
 - `dueling_dqn.py`
-- `data_preprocessor.py`
-- `visualize_matrices.py`
-- `f1_evaluator.py`
+- `tabular_q_learning.py`
+- `integrated_dqn_train.py`
 
 判讀：
 
-- `integrated_dqn_train.py` 目前無法完整執行
-- 這是現階段最主要的功能阻塞點
+- 訓練器已改成預設 DQN、可切換 Q-learning
+- 後續阻塞點改成資料完整性與套件安裝，而不是演算法切換結構
 
 ### 4.4 參考資料狀態
 

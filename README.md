@@ -91,8 +91,15 @@ AI 輕量化最常見於下列場景：
 
 - 目標是訓練 12 個腳本動作的選擇策略
 - 使用 `state_dim=5`、`action_dim=12`
-- 會輸出訓練曲線、Q matrix、R matrix、F1 評估與摘要報告
-- 但這一段目前無法直接執行，因為缺少多個本地模組
+- 現在已改成 **RL 預設走 DQN**，但可以透過參數切換為 **tabular Q-learning**
+- 兩種演算法共用同一個主訓練器與相同輸入資料格式
+
+#### 演算法切換方式
+
+```powershell
+py integrated_dqn_train.py --algorithm dqn --input rl_data_20250721_142929.json
+py integrated_dqn_train.py --algorithm q_learning --input rl_data_20250721_142929.json
+```
 
 ## 5. 已找到的實際輸出成果
 
@@ -203,8 +210,8 @@ py tools/feasibility_check.py
 |---|---|---|
 | Python 語法檢查 | 通過 | 4 支主要 Python 檔皆可做語法級檢查 |
 | 必要套件 | 通過 | `numpy`、`torch`、`sentence_transformers`、`pandas` 可被發現 |
-| 可選套件 | 缺少 | `openai`、`jsonlines`、`docx` 未安裝 |
-| 本地模組 | 缺少 | `dueling_dqn.py`、`data_preprocessor.py`、`visualize_matrices.py`、`f1_evaluator.py` 不在目錄中 |
+| 可選套件 | 缺少 | `openai`、`python-docx` 未安裝 |
+| 本地模組 | 通過 | 已補上 `dueling_dqn.py` 與 `tabular_q_learning.py` |
 | 參考資料夾 | 空白 | `專案說明/` 目前沒有內容 |
 | 範例輸出 | 存在 | 已找到腳本、對話與 RL 樣本 JSON |
 | 金鑰外洩 | 已修正 | 已改為從 `OPENAI_API_KEY` 讀取 |

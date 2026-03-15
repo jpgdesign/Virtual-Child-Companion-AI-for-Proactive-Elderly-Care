@@ -16,9 +16,7 @@ SOURCE_FILES = [
 ]
 REQUIRED_LOCAL_MODULES = [
     "dueling_dqn.py",
-    "data_preprocessor.py",
-    "visualize_matrices.py",
-    "f1_evaluator.py",
+    "tabular_q_learning.py",
 ]
 REQUIRED_PACKAGES = [
     "numpy",
@@ -28,7 +26,6 @@ REQUIRED_PACKAGES = [
 ]
 OPTIONAL_PACKAGES = [
     "openai",
-    "jsonlines",
     "docx",
 ]
 SECRET_PATTERNS = [
@@ -141,7 +138,16 @@ def build_summary(report: dict) -> dict:
     local_missing = [name for name, result in report["local_modules"].items() if not result["present"]]
     compile_failures = [name for name, result in report["syntax_checks"].items() if result["status"] != "pass"]
 
-    if not compile_failures and not required_missing and not local_missing and report["secret_scan"]["count"] == 0:
+    reference_dir_empty = report["reference_status"]["exists"] and report["reference_status"]["file_count"] == 0
+
+    if (
+        not compile_failures
+        and not required_missing
+        and not local_missing
+        and report["secret_scan"]["count"] == 0
+        and not optional_missing
+        and not reference_dir_empty
+    ):
         readiness = "ready"
     elif not compile_failures:
         readiness = "partial"
@@ -154,7 +160,7 @@ def build_summary(report: dict) -> dict:
         "required_missing": required_missing,
         "optional_missing": optional_missing,
         "local_missing": local_missing,
-        "reference_dir_empty": report["reference_status"]["exists"] and report["reference_status"]["file_count"] == 0,
+        "reference_dir_empty": reference_dir_empty,
         "secrets_found": report["secret_scan"]["count"],
     }
 

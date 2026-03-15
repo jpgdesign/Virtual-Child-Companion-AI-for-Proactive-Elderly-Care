@@ -3,3 +3,4 @@ __pycache__/
 .env
 .venv/
 venv/
+outputs_*_smoke/

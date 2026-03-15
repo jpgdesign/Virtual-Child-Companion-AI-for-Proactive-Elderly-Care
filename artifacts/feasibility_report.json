@@ -32,25 +32,16 @@
     "openai": {
       "installed": false
     },
-    "jsonlines": {
-      "installed": false
-    },
     "docx": {
       "installed": false
     }
   },
   "local_modules": {
     "dueling_dqn.py": {
-      "present": false
+      "present": true
     },
-    "data_preprocessor.py": {
-      "present": false
-    },
-    "visualize_matrices.py": {
-      "present": false
-    },
-    "f1_evaluator.py": {
-      "present": false
+    "tabular_q_learning.py": {
+      "present": true
     }
   },
   "reference_status": {
@@ -111,15 +102,9 @@
     "required_missing": [],
     "optional_missing": [
       "openai",
-      "jsonlines",
       "docx"
     ],
-    "local_missing": [
-      "dueling_dqn.py",
-      "data_preprocessor.py",
-      "visualize_matrices.py",
-      "f1_evaluator.py"
-    ],
+    "local_missing": [],
     "reference_dir_empty": true,
     "secrets_found": 0
   }
