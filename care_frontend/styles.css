@@ -357,6 +357,8 @@ textarea:disabled {
   overflow: auto;
   display: grid;
   gap: 14px;
+  align-content: start;
+  grid-auto-rows: max-content;
   padding: 18px;
   border-radius: var(--radius-xl);
   background:
@@ -371,6 +373,7 @@ textarea:disabled {
   padding: 16px 18px;
   border-radius: 24px;
   border: 1px solid var(--line);
+  align-self: start;
   box-shadow: 0 12px 24px rgba(24, 49, 60, 0.05);
 }
 
@@ -589,6 +592,7 @@ textarea:disabled {
   text-align: center;
   color: var(--ink-soft);
   background: rgba(255, 255, 255, 0.48);
+  align-self: center;
 }
 
 .empty-state strong {
