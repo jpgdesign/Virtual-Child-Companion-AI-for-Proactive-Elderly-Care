@@ -62,6 +62,10 @@ async function requestJson(url, payload = {}, options = {}) {
   return data;
 }
 
+async function waitForNextPaint() {
+  await new Promise((resolve) => window.requestAnimationFrame(() => window.setTimeout(resolve, 0)));
+}
+
 async function requestBootstrap() {
   try {
     return await requestJson("/api/bootstrap");
@@ -1513,6 +1517,7 @@ async function handleChatSubmit(event) {
   state.chatSubmitting = true;
   stopBackgroundPolling();
   renderApp();
+  await waitForNextPaint();
   try {
     const payload = await requestJson("/api/chat", {
       auth_token: state.authToken,
