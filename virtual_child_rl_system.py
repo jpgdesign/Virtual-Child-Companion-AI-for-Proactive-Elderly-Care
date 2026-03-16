@@ -541,6 +541,23 @@ class VirtualChildRLSystem:
         self.session.started = True
         logger.info("Started session with script_id=%s target_slot=%s", next_script["script_id"], next_script["target_slot"])
         opening_message = self._apply_persona_voice(self.current_step["child_dialogue"], add_address=True)
+        if self.llm is not None:
+            try:
+                generation = self.llm.generate_opening_reply(
+                    persona_context=self.persona_profile,
+                    prompt_overrides=self.session.prompt_settings,
+                    selected_script=self.current_script,
+                    reference_reply=opening_message,
+                    current_target_slot=self.current_script["target_slot"],
+                    target_slot_items=SLOT_DEFINITIONS[self.current_script["target_slot"]],
+                    pending_items=SLOT_DEFINITIONS[self.current_script["target_slot"]],
+                    filled_slots=self.session.filled_slots,
+                    slot_value_details=self.session.slot_value_details,
+                )
+                if generation.reply:
+                    opening_message = self._apply_persona_voice(generation.reply, add_address=True)
+            except Exception as exc:  # pragma: no cover - network dependent
+                logger.warning("Opening generation failed, using reference opening: %s", exc)
         self.session.latest_assistant_message = opening_message
         return opening_message
 

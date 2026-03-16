@@ -1,3 +1,6 @@
+const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition || null;
+let speechRecognition = null;
+
 const state = {
   bootstrap: null,
   currentView: "landing",
@@ -12,10 +15,15 @@ const state = {
   pollTimer: null,
   backgroundPolling: false,
   chatSubmitting: false,
+  chatDraft: "",
   loginError: "",
   adminLoginError: "",
   adminPersonaId: "",
   adminUserDraft: null,
+  voiceEnabled: false,
+  voiceListening: false,
+  voiceStatus: SpeechRecognitionCtor ? "語音輸入已關閉，開啟後可開始收音。" : "目前瀏覽器不支援語音輸入。",
+  voiceBaseText: "",
 };
 
 const root = document.getElementById("app-root");
@@ -85,6 +93,124 @@ function formatMetric(value) {
 
 function formatPercent(value) {
   return `${Math.round((value || 0) * 100)}%`;
+}
+
+function isVoiceSupported() {
+  return Boolean(SpeechRecognitionCtor);
+}
+
+function getChatInputElement() {
+  return document.getElementById("chat-input");
+}
+
+function setChatInputValue(value) {
+  state.chatDraft = value;
+  const textarea = getChatInputElement();
+  if (!textarea) return;
+  textarea.value = value;
+}
+
+function handleChatInputSync(event) {
+  state.chatDraft = event.target.value;
+}
+
+function stopVoiceRecognition(statusMessage = "語音輸入已停止。") {
+  if (speechRecognition) {
+    speechRecognition.onresult = null;
+    speechRecognition.onerror = null;
+    speechRecognition.onend = null;
+    speechRecognition.stop();
+    speechRecognition = null;
+  }
+  state.voiceListening = false;
+  state.voiceBaseText = "";
+  state.voiceStatus = statusMessage;
+}
+
+function startVoiceRecognition() {
+  if (!isVoiceSupported() || !state.voiceEnabled || state.chatSubmitting) {
+    return;
+  }
+  stopVoiceRecognition("語音輸入準備中。");
+  const recognition = new SpeechRecognitionCtor();
+  speechRecognition = recognition;
+  state.voiceListening = true;
+  state.voiceBaseText = getChatInputElement()?.value.trim() || state.chatDraft.trim() || "";
+  state.voiceStatus = "收音中，請直接說話。";
+  recognition.lang = "zh-TW";
+  recognition.continuous = true;
+  recognition.interimResults = true;
+
+  recognition.onresult = (event) => {
+    const transcripts = [];
+    for (let index = event.resultIndex; index < event.results.length; index += 1) {
+      transcripts.push(event.results[index][0].transcript.trim());
+    }
+    const spokenText = transcripts.join("").trim();
+    const combined = [state.voiceBaseText, spokenText].filter(Boolean).join(state.voiceBaseText && spokenText ? " " : "");
+    setChatInputValue(combined);
+  };
+
+  recognition.onerror = (event) => {
+    state.voiceListening = false;
+    state.voiceStatus = `語音輸入失敗：${event.error || "未知錯誤"}`;
+    speechRecognition = null;
+    renderApp();
+  };
+
+  recognition.onend = () => {
+    const textarea = getChatInputElement();
+    const hasText = Boolean(textarea?.value.trim());
+    state.voiceListening = false;
+    speechRecognition = null;
+    state.voiceBaseText = "";
+    state.voiceStatus = hasText ? "收音完成，內容已帶入輸入框。" : "語音輸入已停止。";
+    renderApp();
+  };
+
+  recognition.start();
+}
+
+function handleVoiceToggle() {
+  if (!isVoiceSupported()) {
+    state.voiceStatus = "目前瀏覽器不支援語音輸入。";
+    renderApp();
+    return;
+  }
+  state.voiceEnabled = !state.voiceEnabled;
+  if (!state.voiceEnabled) {
+    stopVoiceRecognition("語音輸入已關閉。");
+  } else {
+    state.voiceStatus = "語音輸入已開啟，按下開始收音即可說話。";
+  }
+  renderApp();
+}
+
+function handleVoiceListeningToggle() {
+  if (!state.voiceEnabled || !isVoiceSupported()) {
+    return;
+  }
+  if (state.voiceListening) {
+    stopVoiceRecognition("語音輸入已停止。");
+    renderApp();
+    return;
+  }
+  startVoiceRecognition();
+  renderApp();
+}
+
+function handleChatInputKeydown(event) {
+  if (event.key !== "Enter" || event.shiftKey || event.isComposing || event.keyCode === 229) {
+    return;
+  }
+  event.preventDefault();
+  if (state.chatSubmitting) {
+    return;
+  }
+  const form = document.getElementById("chat-form");
+  if (form) {
+    form.requestSubmit();
+  }
 }
 
 function getBootstrap() {
@@ -200,6 +326,9 @@ async function loadAdminState() {
 
 async function navigate(view) {
   state.currentView = view;
+  if (view !== "family" && view !== "elder" && state.voiceListening) {
+    stopVoiceRecognition("已離開對話頁面，語音輸入已停止。");
+  }
   if (view === "family" || view === "elder") {
     await ensureConversationSession();
   }
@@ -483,10 +612,64 @@ function renderComposer(buttonLabel = "送出訊息") {
     <form id="chat-form" class="composer">
       <label class="composer-field">
         <span>輸入長者回覆</span>
-        <textarea id="chat-input" rows="4" placeholder="例如：我今天早上有去公園走走一下，現在覺得還好。"${state.chatSubmitting ? " disabled" : ""}></textarea>
+        <textarea id="chat-input" rows="4" placeholder="例如：我今天早上有去公園走走一下，現在覺得還好。"${state.chatSubmitting ? " disabled" : ""}>${escapeHtml(state.chatDraft)}</textarea>
       </label>
       <div class="composer-actions">
         <p class="composer-note">${state.chatSubmitting ? "系統正在完成分析、填槽與生成回覆，請稍候。" : "系統會先完成分析、填槽與生成，再顯示最終回覆。"}</p>
+        <button class="send-button" type="submit"${state.chatSubmitting ? " disabled" : ""}>${state.chatSubmitting ? "分析中..." : buttonLabel}</button>
+      </div>
+    </form>
+  `;
+}
+
+function renderRichComposer(buttonLabel = "送出訊息") {
+  const voiceSupported = isVoiceSupported();
+  return `
+    <form id="chat-form" class="composer">
+      <div class="composer-tools">
+        <div class="tool-group">
+          <button class="tool-button${state.voiceEnabled ? " is-active" : ""}" type="button" data-action="toggle-voice"${!voiceSupported ? " disabled" : ""}>
+            ${state.voiceEnabled ? "語音輸入：開" : "語音輸入：關"}
+          </button>
+          <button class="tool-button${state.voiceListening ? " is-active" : ""}" type="button" data-action="toggle-listening"${!voiceSupported || !state.voiceEnabled || state.chatSubmitting ? " disabled" : ""}>
+            ${state.voiceListening ? "停止收音" : "開始收音"}
+          </button>
+        </div>
+        <span class="voice-status${state.voiceListening ? " is-live" : ""}">${escapeHtml(state.voiceStatus)}</span>
+      </div>
+      <label class="composer-field">
+        <span>回覆內容</span>
+        <textarea id="chat-input" rows="4" placeholder="例如：我今天早上有去公園走走一下，現在覺得還好。"${state.chatSubmitting ? " disabled" : ""}></textarea>
+      </label>
+      <div class="composer-actions">
+        <p class="composer-note">${state.chatSubmitting ? "系統正在完成分析、填槽與生成回覆，請稍候。" : "按 Enter 直接送出，Shift + Enter 可換行；系統會等 LLM 完成後才顯示最終回覆。"}</p>
+        <button class="send-button" type="submit"${state.chatSubmitting ? " disabled" : ""}>${state.chatSubmitting ? "分析中..." : buttonLabel}</button>
+      </div>
+    </form>
+  `;
+}
+
+function renderFinalComposer(buttonLabel = "送出訊息") {
+  const voiceSupported = isVoiceSupported();
+  return `
+    <form id="chat-form" class="composer">
+      <div class="composer-tools">
+        <div class="tool-group">
+          <button class="tool-button${state.voiceEnabled ? " is-active" : ""}" type="button" data-action="toggle-voice"${!voiceSupported ? " disabled" : ""}>
+            ${state.voiceEnabled ? "語音輸入：開" : "語音輸入：關"}
+          </button>
+          <button class="tool-button${state.voiceListening ? " is-active" : ""}" type="button" data-action="toggle-listening"${!voiceSupported || !state.voiceEnabled || state.chatSubmitting ? " disabled" : ""}>
+            ${state.voiceListening ? "停止收音" : "開始收音"}
+          </button>
+        </div>
+        <span class="voice-status${state.voiceListening ? " is-live" : ""}">${escapeHtml(state.voiceStatus)}</span>
+      </div>
+      <label class="composer-field">
+        <span>回覆內容</span>
+        <textarea id="chat-input" rows="4" placeholder="例如：我今天早上有去公園走走一下，現在覺得還好。"${state.chatSubmitting ? " disabled" : ""}>${escapeHtml(state.chatDraft)}</textarea>
+      </label>
+      <div class="composer-actions">
+        <p class="composer-note">${state.chatSubmitting ? "系統正在完成分析、填槽與生成回覆，請稍候。" : "按 Enter 直接送出，Shift + Enter 可換行；系統會等 LLM 完成後才顯示最終回覆。"}</p>
         <button class="send-button" type="submit"${state.chatSubmitting ? " disabled" : ""}>${state.chatSubmitting ? "分析中..." : buttonLabel}</button>
       </div>
     </form>
@@ -668,7 +851,7 @@ function renderFamilyView() {
           </div>
         </div>
         ${renderChatThread(payload)}
-        ${renderComposer("送出家屬訊息")}
+        ${renderFinalComposer("送出家屬訊息")}
       </section>
       ${renderSummarySection(summary, payload)}
     </main>
@@ -694,7 +877,7 @@ function renderElderView() {
     </section>
     <section class="chat-panel chat-panel-single">
       ${renderChatThread(payload)}
-      ${renderComposer("送出長者訊息")}
+      ${renderFinalComposer("送出長者訊息")}
     </section>
   `;
 }
@@ -1203,6 +1386,7 @@ async function handleUserLogin(event) {
     state.loginError = "";
     state.sessionId = null;
     state.lastPayload = null;
+    state.chatDraft = "";
     state.reportData = null;
     await navigate("portal");
   } catch (error) {
@@ -1232,6 +1416,9 @@ async function handleChatSubmit(event) {
   const textarea = document.getElementById("chat-input");
   const message = textarea.value.trim();
   if (!message) return;
+  if (state.voiceListening) {
+    stopVoiceRecognition("語音輸入已停止，正在送出訊息。");
+  }
   state.chatSubmitting = true;
   stopBackgroundPolling();
   renderApp();
@@ -1242,6 +1429,7 @@ async function handleChatSubmit(event) {
       message,
     });
     textarea.value = "";
+    state.chatDraft = "";
     state.lastPayload = payload;
     if (payload.background_processing) {
       scheduleBackgroundPolling();
@@ -1335,11 +1523,14 @@ function bindEvents() {
     if (state.authToken) {
       await requestJson("/api/logout", { auth_token: state.authToken });
     }
+    stopVoiceRecognition("語音輸入已停止。");
+    state.voiceEnabled = false;
     stopBackgroundPolling();
     state.authToken = "";
     state.currentUser = null;
     state.sessionId = null;
     state.lastPayload = null;
+    state.chatDraft = "";
     state.reportData = null;
     state.currentView = "landing";
     renderApp();
@@ -1361,6 +1552,13 @@ function bindEvents() {
   if (adminLoginForm) adminLoginForm.addEventListener("submit", handleAdminLogin);
   const chatForm = document.getElementById("chat-form");
   if (chatForm) chatForm.addEventListener("submit", handleChatSubmit);
+  const chatInput = document.getElementById("chat-input");
+  if (chatInput) {
+    chatInput.addEventListener("keydown", handleChatInputKeydown);
+    chatInput.addEventListener("input", handleChatInputSync);
+  }
+  root.querySelectorAll("[data-action='toggle-voice']").forEach((button) => button.addEventListener("click", handleVoiceToggle));
+  root.querySelectorAll("[data-action='toggle-listening']").forEach((button) => button.addEventListener("click", handleVoiceListeningToggle));
 
   const personaSelect = document.getElementById("admin-persona-select");
   if (personaSelect) {

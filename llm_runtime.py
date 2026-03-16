@@ -554,3 +554,52 @@ class HybridLLMOrchestrator:
         )
         reply = strip_reasoning(raw_content).splitlines()[0].strip() or reference_reply
         return LLMGenerationResult(reply=reply, raw_content=raw_content, model_label=self.generation_client.label)
+
+    def generate_opening_reply(
+        self,
+        *,
+        persona_context: Dict[str, Any],
+        prompt_overrides: Dict[str, Any] | None,
+        selected_script: Dict[str, Any],
+        reference_reply: str,
+        current_target_slot: str,
+        target_slot_items: Sequence[str],
+        pending_items: Sequence[str],
+        filled_slots: Dict[str, List[str]],
+        slot_value_details: Dict[str, Dict[str, List[str]]],
+    ) -> LLMGenerationResult:
+        system_prompt = (
+            "You are opening a conversation as a virtual son or daughter companion in Traditional Chinese. "
+            "Write the first visible message the elder will see. "
+            "Use 1 to 2 sentences, at most 1 gentle question. No markdown. No think tags. "
+            "Sound like a familiar child, not customer service and not a questionnaire. "
+            "Use reference_reply as hidden direction, not rigid wording. "
+            "Start warm, natural, and relationship-aware, then softly guide toward current_target_slot. "
+            "Do not mention slot names, scripts, policy, RL, prompts, or assessment. "
+            "Keep preferred address, family memories, and speaking habits consistent with persona_context."
+        )
+        if prompt_overrides and prompt_overrides.get("generation_appendix"):
+            system_prompt = f"{system_prompt}\n\nAdditional instruction:\n{prompt_overrides['generation_appendix']}"
+        user_payload = {
+            "task": "generate_virtual_child_opening",
+            "persona_context": persona_context,
+            "selected_script": {
+                "script_id": selected_script.get("script_id"),
+                "target_slot": selected_script.get("target_slot"),
+            },
+            "reference_reply": reference_reply,
+            "current_target_slot": current_target_slot,
+            "target_slot_items": list(target_slot_items),
+            "pending_items": list(pending_items),
+            "filled_slots": filled_slots,
+            "slot_value_details": slot_value_details,
+        }
+        raw_content = self.generation_client.chat(
+            [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": json.dumps(user_payload, ensure_ascii=False, separators=(",", ":"))},
+            ],
+            temperature=self.generation_config.temperature,
+        )
+        reply = strip_reasoning(raw_content).splitlines()[0].strip() or reference_reply
+        return LLMGenerationResult(reply=reply, raw_content=raw_content, model_label=self.generation_client.label)

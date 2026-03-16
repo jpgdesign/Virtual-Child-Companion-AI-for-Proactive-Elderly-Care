@@ -741,8 +741,20 @@ textarea:disabled {
 }
 
 .voice-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: rgba(36, 95, 103, 0.08);
+  color: var(--teal);
   font-size: 0.94rem;
   font-weight: 700;
+}
+
+.voice-status.is-live {
+  background: rgba(203, 103, 74, 0.12);
+  color: #9b3d25;
 }
 
 .composer-field {
