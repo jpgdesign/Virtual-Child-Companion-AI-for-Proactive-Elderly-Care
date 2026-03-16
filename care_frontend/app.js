@@ -16,6 +16,7 @@ const state = {
   backgroundPolling: false,
   chatSubmitting: false,
   chatDraft: "",
+  pendingUserMessage: "",
   loginError: "",
   adminLoginError: "",
   adminPersonaId: "",
@@ -676,6 +677,94 @@ function renderFinalComposer(buttonLabel = "送出訊息") {
   `;
 }
 
+function renderVisibleChatThread(payload, compact = false, showInternalMeta = false) {
+  const turns = Array.isArray(payload.turns) ? payload.turns : [];
+  const latestPrompt = payload.latest_assistant_message || "";
+  const assistantName = getAssistantName();
+  const bubbles = [];
+
+  const renderAssistantMeta = (turn) => {
+    if (!showInternalMeta || !turn) {
+      return `<span class="bubble-tag">${escapeHtml(assistantName)}</span>`;
+    }
+    return [
+      `<span class="bubble-tag">${escapeHtml(assistantName)}</span>`,
+      `<span class="bubble-tag">劇本 ${escapeHtml(turn.script_id)}</span>`,
+      `<span class="bubble-tag">${escapeHtml(turn.target_slot || "")}</span>`,
+    ].join("");
+  };
+
+  const renderUserMeta = (turn) => {
+    if (!showInternalMeta || !turn) {
+      return '<span class="bubble-tag">長者回覆</span>';
+    }
+    return [
+      '<span class="bubble-tag">長者回覆</span>',
+      `<span class="bubble-tag">偏離 ${escapeHtml(turn.deviation_level)}</span>`,
+    ].join("");
+  };
+
+  if (turns.length === 0 && latestPrompt) {
+    bubbles.push(`
+      <article class="bubble assistant">
+        <div class="bubble-meta">${renderAssistantMeta()}</div>
+        <div class="bubble-body">${escapeHtml(latestPrompt)}</div>
+      </article>
+    `);
+  }
+
+  turns.forEach((turn) => {
+    bubbles.push(`
+      <article class="bubble assistant">
+        <div class="bubble-meta">${renderAssistantMeta(turn)}</div>
+        <div class="bubble-body">${escapeHtml(turn.assistant_message)}</div>
+      </article>
+      <article class="bubble user">
+        <div class="bubble-meta">${renderUserMeta(turn)}</div>
+        <div class="bubble-body">${escapeHtml(turn.elder_message)}</div>
+      </article>
+    `);
+  });
+
+  if (state.chatSubmitting && state.pendingUserMessage) {
+    bubbles.push(`
+      <article class="bubble user">
+        <div class="bubble-meta">${renderUserMeta()}</div>
+        <div class="bubble-body">${escapeHtml(state.pendingUserMessage)}</div>
+      </article>
+      <article class="bubble assistant is-typing">
+        <div class="bubble-meta">
+          <span class="bubble-tag">${escapeHtml(assistantName)}</span>
+        </div>
+        <div class="bubble-body">
+          <span class="typing-indicator" aria-hidden="true">
+            <span></span><span></span><span></span>
+          </span>
+          <span class="typing-text">...正在輸入</span>
+        </div>
+      </article>
+    `);
+  } else if (turns.length > 0 && latestPrompt) {
+    bubbles.push(`
+      <article class="bubble assistant">
+        <div class="bubble-meta">${renderAssistantMeta()}</div>
+        <div class="bubble-body">${escapeHtml(latestPrompt)}</div>
+      </article>
+    `);
+  }
+
+  return `
+    <div class="chat-thread${compact ? " is-compact" : ""}">
+      ${bubbles.join("") || `
+        <div class="empty-state">
+          <strong>還沒有新的對話內容</strong>
+          <p>輸入一句話後，系統會先分析，再顯示虛擬兒女的最終回覆。</p>
+        </div>
+      `}
+    </div>
+  `;
+}
+
 function renderMetricGrid(items, className = "summary-grid") {
   return `
     <div class="${className}">
@@ -850,7 +939,7 @@ function renderFamilyView() {
             <p class="panel-text">這裡是家屬看到的完整視角，系統會先完成分析與生成，再回覆並同步更新照護摘要。</p>
           </div>
         </div>
-        ${renderChatThread(payload)}
+        ${renderVisibleChatThread(payload, false, true)}
         ${renderFinalComposer("送出家屬訊息")}
       </section>
       ${renderSummarySection(summary, payload)}
@@ -876,7 +965,7 @@ function renderElderView() {
       </div>
     </section>
     <section class="chat-panel chat-panel-single">
-      ${renderChatThread(payload)}
+      ${renderVisibleChatThread(payload)}
       ${renderFinalComposer("送出長者訊息")}
     </section>
   `;
@@ -1387,6 +1476,7 @@ async function handleUserLogin(event) {
     state.sessionId = null;
     state.lastPayload = null;
     state.chatDraft = "";
+    state.pendingUserMessage = "";
     state.reportData = null;
     await navigate("portal");
   } catch (error) {
@@ -1419,6 +1509,7 @@ async function handleChatSubmit(event) {
   if (state.voiceListening) {
     stopVoiceRecognition("語音輸入已停止，正在送出訊息。");
   }
+  state.pendingUserMessage = message;
   state.chatSubmitting = true;
   stopBackgroundPolling();
   renderApp();
@@ -1430,6 +1521,7 @@ async function handleChatSubmit(event) {
     });
     textarea.value = "";
     state.chatDraft = "";
+    state.pendingUserMessage = "";
     state.lastPayload = payload;
     if (payload.background_processing) {
       scheduleBackgroundPolling();
@@ -1437,6 +1529,7 @@ async function handleChatSubmit(event) {
       stopBackgroundPolling();
     }
   } catch (error) {
+    state.pendingUserMessage = "";
     window.alert(error.message);
   } finally {
     state.chatSubmitting = false;
@@ -1531,6 +1624,7 @@ function bindEvents() {
     state.sessionId = null;
     state.lastPayload = null;
     state.chatDraft = "";
+    state.pendingUserMessage = "";
     state.reportData = null;
     state.currentView = "landing";
     renderApp();
